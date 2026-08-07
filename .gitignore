@@ -1,0 +1,21 @@
+# deps
+node_modules/
+
+# builds
+dist/
+build/
+*.tsbuildinfo
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# test / coverage
+coverage/
+
+# editor & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,355 @@
+{
+  "version": "1.0.0",
+  "units": "m",
+  "upAxis": "Y",
+  "anchorConvention": "SW-bottom",
+  "parts": [
+    {
+      "id": "panel-wall-1200",
+      "file": "parts/panel-wall-1200.glb",
+      "placeholder": true,
+      "category": "structure",
+      "dimensions": { "x": 1.2, "y": 2.7, "z": 0.05 },
+      "tilingAxis": "x",
+      "tileStepM": 1.2,
+      "anchors": [
+        { "name": "west", "position": [0, 0, 0] },
+        { "name": "east", "position": [1.2, 0, 0] }
+      ],
+      "skus": ["PANEL-EPS-FR-50-WALL"],
+      "triBudget": 400
+    },
+    {
+      "id": "panel-wall-cut",
+      "file": "parts/panel-wall-cut.glb",
+      "placeholder": true,
+      "category": "structure",
+      "dimensions": { "x": 1.2, "y": 2.7, "z": 0.05 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "west", "position": [0, 0, 0] }],
+      "skus": ["PANEL-EPS-FR-50-WALL"],
+      "triBudget": 200,
+      "scalable": { "axis": "x", "minM": 0.05, "maxM": 1.2 }
+    },
+    {
+      "id": "flashing-corner",
+      "file": "parts/flashing-corner.glb",
+      "placeholder": true,
+      "category": "structure",
+      "dimensions": { "x": 0.08, "y": 2.7, "z": 0.08 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "cornerBase", "position": [0, 0, 0] }],
+      "skus": ["PANEL-EPS-FR-50-WALL"],
+      "triBudget": 150
+    },
+    {
+      "id": "flashing-basechannel",
+      "file": "parts/flashing-basechannel.glb",
+      "placeholder": true,
+      "category": "structure",
+      "dimensions": { "x": 1.2, "y": 0.06, "z": 0.06 },
+      "tilingAxis": "x",
+      "tileStepM": 1.2,
+      "anchors": [{ "name": "west", "position": [0, 0, 0] }],
+      "skus": ["PANEL-EPS-FR-50-WALL"],
+      "triBudget": 100
+    },
+    {
+      "id": "flashing-tee-join",
+      "file": "parts/flashing-tee-join.glb",
+      "placeholder": true,
+      "category": "structure",
+      "dimensions": { "x": 0.15, "y": 2.7, "z": 0.15 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "joinFace", "position": [0, 0, 0.075] }],
+      "skus": ["TEE-JOIN-KIT"],
+      "triBudget": 200
+    },
+    {
+      "id": "roof-sheet-skillion",
+      "file": "parts/roof-sheet-skillion.glb",
+      "placeholder": true,
+      "category": "roof",
+      "dimensions": { "x": 0.76, "y": 0.08, "z": 3.1 },
+      "tilingAxis": "x",
+      "tileStepM": 0.76,
+      "anchors": [{ "name": "west", "position": [0, 0, 0] }],
+      "skus": ["ROOF-MODULE"],
+      "triBudget": 300
+    },
+    {
+      "id": "barge-gutter-section",
+      "file": "parts/barge-gutter-section.glb",
+      "placeholder": true,
+      "category": "roof",
+      "dimensions": { "x": 1.2, "y": 0.15, "z": 0.15 },
+      "tilingAxis": "x",
+      "tileStepM": 1.2,
+      "anchors": [{ "name": "west", "position": [0, 0, 0] }],
+      "skus": ["GUTTER-DOWNPIPE-SET"],
+      "triBudget": 200
+    },
+    {
+      "id": "downpipe",
+      "file": "parts/downpipe.glb",
+      "placeholder": true,
+      "category": "roof",
+      "dimensions": { "x": 0.09, "y": 2.85, "z": 0.09 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "base", "position": [0.045, 0, 0.045] }],
+      "skus": ["GUTTER-DOWNPIPE-SET"],
+      "triBudget": 150,
+      "scalable": { "axis": "y", "minM": 2.0, "maxM": 4.0 }
+    },
+    {
+      "id": "chassis-edge",
+      "file": "parts/chassis-edge.glb",
+      "placeholder": true,
+      "category": "structure",
+      "dimensions": { "x": 1.2, "y": 0.25, "z": 0.08 },
+      "tilingAxis": "x",
+      "tileStepM": 1.2,
+      "anchors": [{ "name": "west", "position": [0, 0, 0] }],
+      "skus": ["CHASSIS-OFFICE-SINGLE", "CHASSIS-TOILET-SINGLE", "CHASSIS-COMPLEX"],
+      "triBudget": 200
+    },
+    {
+      "id": "footing-surefoot",
+      "file": "parts/footing-surefoot.glb",
+      "placeholder": true,
+      "category": "structure",
+      "dimensions": { "x": 0.3, "y": 0.3, "z": 0.3 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "postTop", "position": [0.15, 0.3, 0.15] }],
+      "skus": ["FOOTING-SUREFOOT"],
+      "triBudget": 300,
+      "scalable": { "axis": "y", "minM": 0.1, "maxM": 1.5 }
+    },
+
+    {
+      "id": "door-920-single",
+      "file": "parts/door-920-single.glb",
+      "placeholder": true,
+      "category": "opening",
+      "dimensions": { "x": 1.2, "y": 2.7, "z": 0.05 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "sillWest", "position": [0, 0, 0] }],
+      "skus": ["DOOR-920-SC"],
+      "triBudget": 1200,
+      "replacesBays": 1
+    },
+    {
+      "id": "door-820-single",
+      "file": "parts/door-820-single.glb",
+      "placeholder": true,
+      "category": "opening",
+      "dimensions": { "x": 1.2, "y": 2.7, "z": 0.05 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "sillWest", "position": [0, 0, 0] }],
+      "skus": ["DOOR-820-SC"],
+      "triBudget": 1200,
+      "replacesBays": 1
+    },
+    {
+      "id": "door-1600-double",
+      "file": "parts/door-1600-double.glb",
+      "placeholder": true,
+      "category": "opening",
+      "dimensions": { "x": 2.4, "y": 2.7, "z": 0.05 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "sillWest", "position": [0, 0, 0] }],
+      "skus": ["DOOR-1600-DOUBLE"],
+      "triBudget": 1800,
+      "replacesBays": 2
+    },
+    {
+      "id": "window-sliding-1175",
+      "file": "parts/window-sliding-1175.glb",
+      "placeholder": true,
+      "category": "opening",
+      "dimensions": { "x": 1.2, "y": 2.7, "z": 0.05 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "sillWest", "position": [0, 0, 0] }],
+      "skus": ["WINDOW-SLIDING-1175"],
+      "triBudget": 900,
+      "replacesBays": 1
+    },
+    {
+      "id": "window-fixed-1175",
+      "file": "parts/window-fixed-1175.glb",
+      "placeholder": true,
+      "category": "opening",
+      "dimensions": { "x": 1.2, "y": 2.7, "z": 0.05 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "sillWest", "position": [0, 0, 0] }],
+      "skus": ["WINDOW-FIXED-1175"],
+      "triBudget": 700,
+      "replacesBays": 1
+    },
+    {
+      "id": "window-toilet-600x300",
+      "file": "parts/window-toilet-600x300.glb",
+      "placeholder": true,
+      "category": "opening",
+      "dimensions": { "x": 1.2, "y": 2.7, "z": 0.05 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "sillWest", "position": [0, 0, 0] }],
+      "skus": ["WINDOW-TOILET-600X300"],
+      "triBudget": 500,
+      "replacesBays": 1
+    },
+
+    {
+      "id": "rapta-walkway-bay",
+      "file": "parts/rapta-walkway-bay.glb",
+      "placeholder": true,
+      "category": "sitekit",
+      "dimensions": { "x": 1.8, "y": 2.6, "z": 2.4 },
+      "tilingAxis": "x",
+      "tileStepM": 1.8,
+      "anchors": [
+        { "name": "west", "position": [0, 0, 0] },
+        { "name": "east", "position": [1.8, 0, 0] }
+      ],
+      "skus": ["WALKWAY-BAY-STD", "WALKWAY-BAY-ELEV"],
+      "triBudget": 2500
+    },
+    {
+      "id": "balustrade-1250",
+      "file": "parts/balustrade-1250.glb",
+      "placeholder": true,
+      "category": "sitekit",
+      "dimensions": { "x": 1.25, "y": 1.0, "z": 0.05 },
+      "tilingAxis": "x",
+      "tileStepM": 1.25,
+      "anchors": [{ "name": "west", "position": [0, 0, 0] }],
+      "skus": ["BALUSTRADE-1250"],
+      "triBudget": 800
+    },
+    {
+      "id": "balustrade-3000",
+      "file": "parts/balustrade-3000.glb",
+      "placeholder": true,
+      "category": "sitekit",
+      "dimensions": { "x": 3.0, "y": 1.0, "z": 0.05 },
+      "tilingAxis": "x",
+      "tileStepM": 3.0,
+      "anchors": [{ "name": "west", "position": [0, 0, 0] }],
+      "skus": ["BALUSTRADE-3000"],
+      "triBudget": 1200
+    },
+    {
+      "id": "balustrade-post",
+      "file": "parts/balustrade-post.glb",
+      "placeholder": true,
+      "category": "sitekit",
+      "dimensions": { "x": 0.06, "y": 1.0, "z": 0.06 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "base", "position": [0.03, 0, 0.03] }],
+      "skus": ["BALUSTRADE-1250", "BALUSTRADE-3000"],
+      "triBudget": 200
+    },
+    {
+      "id": "steps-single-width",
+      "file": "parts/steps-single-width.glb",
+      "placeholder": true,
+      "category": "sitekit",
+      "dimensions": { "x": 1.0, "y": 1.1, "z": 1.6 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "landingEdge", "position": [0, 1.1, 0] }],
+      "skus": ["STEPS-SINGLE"],
+      "triBudget": 1500,
+      "scalable": { "axis": "y", "minM": 0.3, "maxM": 1.5 }
+    },
+    {
+      "id": "steps-double-width",
+      "file": "parts/steps-double-width.glb",
+      "placeholder": true,
+      "category": "sitekit",
+      "dimensions": { "x": 2.0, "y": 1.1, "z": 1.6 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "landingEdge", "position": [0, 1.1, 0] }],
+      "skus": ["STEPS-DOUBLE"],
+      "triBudget": 2000,
+      "scalable": { "axis": "y", "minM": 0.3, "maxM": 1.5 }
+    },
+    {
+      "id": "tank-5000",
+      "file": "parts/tank-5000.glb",
+      "placeholder": true,
+      "category": "sitekit",
+      "dimensions": { "x": 1.9, "y": 2.2, "z": 1.9 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "base", "position": [0.95, 0, 0.95] }],
+      "skus": ["TANK-5000"],
+      "triBudget": 1500
+    },
+    {
+      "id": "waterskid-1000",
+      "file": "parts/waterskid-1000.glb",
+      "placeholder": true,
+      "category": "sitekit",
+      "dimensions": { "x": 2.4, "y": 1.5, "z": 1.2 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "base", "position": [0, 0, 0] }],
+      "skus": ["WATERSKID-1000"],
+      "triBudget": 2500
+    },
+    {
+      "id": "wastetank-4000",
+      "file": "parts/wastetank-4000.glb",
+      "placeholder": true,
+      "category": "sitekit",
+      "dimensions": { "x": 2.4, "y": 0.9, "z": 1.8 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "base", "position": [0, 0, 0] }],
+      "skus": ["WASTETANK-4000"],
+      "triBudget": 1200
+    },
+    {
+      "id": "macerator-pump",
+      "file": "parts/macerator-pump.glb",
+      "placeholder": true,
+      "category": "sitekit",
+      "dimensions": { "x": 0.5, "y": 0.5, "z": 0.4 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "base", "position": [0, 0, 0] }],
+      "skus": ["MACERATOR-PUMP"],
+      "triBudget": 1000
+    },
+
+    {
+      "id": "ac-condenser-bracket",
+      "file": "parts/ac-condenser-bracket.glb",
+      "placeholder": true,
+      "category": "service",
+      "dimensions": { "x": 0.9, "y": 0.7, "z": 0.35 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "wallMount", "position": [0, 0.35, 0] }],
+      "skus": ["AC-CONDENSER-BRACKET"],
+      "triBudget": 1500
+    },
+    {
+      "id": "hws-electric",
+      "file": "parts/hws-electric.glb",
+      "placeholder": true,
+      "category": "service",
+      "dimensions": { "x": 0.55, "y": 1.3, "z": 0.55 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "base", "position": [0.275, 0, 0.275] }],
+      "skus": ["HWS-ELECTRIC"],
+      "triBudget": 800
+    },
+    {
+      "id": "hws-gas",
+      "file": "parts/hws-gas.glb",
+      "placeholder": true,
+      "category": "service",
+      "dimensions": { "x": 0.5, "y": 0.9, "z": 0.25 },
+      "tilingAxis": "none",
+      "anchors": [{ "name": "wallMount", "position": [0, 0.45, 0] }],
+      "skus": ["HWS-GAS"],
+      "triBudget": 800
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "atom-configurator-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "lint": "eslint . --ext .ts,.tsx",
+    "assets:check": "pnpm --filter @atom/assets assets:check",
+    "check:no-cost-leak": "node scripts/check-no-cost-leak.mjs",
+    "ci": "pnpm typecheck && pnpm test && pnpm assets:check && pnpm check:no-cost-leak"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@atom/contracts": ["packages/contracts/src/index.ts"],
+      "@atom/catalog": ["packages/catalog/src/index.ts"],
+      "@atom/blaise-engine": ["packages/blaise-engine/src/index.ts"],
+      "@atom/assets": ["packages/assets/src/manifest.ts"]
+    }
+  }
+}
