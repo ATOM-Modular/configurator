@@ -4,13 +4,13 @@ Web-based 3D modular-building configurator with live pricing and multi-building 
 
 **INTERNAL — cost/margin data must never reach the public bundle.** See Security below.
 
-## Status: M1 complete — engine + pricing API
+## Status: M2 complete — assets + assembly
 
 | Milestone | Status |
 |---|---|
 | M1 Engine + API skeleton | ✅ done |
-| M2 Assets package + assembly | ⬜ next |
-| M3 Single-building configurator | ⬜ |
+| M2 Assets package + assembly | ✅ done |
+| M3 Single-building configurator | ⬜ next |
 | M4 Site mode (Zinfra acceptance) | ⬜ |
 | M5 Outputs / export | ⬜ |
 
@@ -54,6 +54,17 @@ INTERNAL_API_TOKEN=dev-secret pnpm --filter pricing-api dev
 1. **Package boundary** — `apps/configurator` can never import `@atom/blaise-engine` / `@atom/catalog` (ESLint `no-restricted-imports` + CI grep of the built bundle for `standardCost` / `gpPercent` / `costPerSqm`).
 2. **Type-level split** — `PublicEstimate` vs `InternalEstimate` are separate interfaces; `toPublic()` constructs the public shape field-by-field (no spreads). Contract tests deep-scan serialized public responses for forbidden keys.
 3. **Auth** — internal mode is bearer-token gated and default-denies when `INTERNAL_API_TOKEN` is unset. M365 SSO planned.
+
+## Assembly layer (M2, `packages/assets`)
+
+Pure functions turning config into part placements (`PlacedPart[]` — id, position, rotation, scale) that both the 3D scene and footing schedules consume:
+
+- `tileWallRun` — full 1200mm panels + an X-scaled cut panel for the remainder; openings snap to the panel grid and swap out covered bays (no CSG)
+- `assembleBuilding` — four elevations, corner flashings, base channel/chassis edge, tee joins at module boundaries, roof sheets per module row, gutters/downpipes, 6 footings per module (2×3) scaled to FFL − chassis allowance (hard error past the footing's scalable max)
+- `assembleWalkway` — bays tiled across a gap, posts auto-counted
+- `createPlaceholderPart` — procedural three.js stand-in per manifest part: correct bounding box, SW-bottom origin, `userData.placeholder` flag; authored GLBs replace these with zero code change
+
+Note: assembly lives in `packages/assets` (not `apps/configurator` as SPEC drafted) so it's testable without the React app and reusable by exports — flagged as an accepted deviation.
 
 ## Engine behaviours worth knowing
 

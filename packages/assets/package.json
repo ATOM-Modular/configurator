@@ -3,17 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "src/manifest.ts",
-  "types": "src/manifest.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "assets:check": "tsx scripts/assets-check.ts"
   },
   "dependencies": {
+    "three": "^0.169.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
     "@atom/catalog": "workspace:*",
+    "@types/three": "^0.169.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
   }

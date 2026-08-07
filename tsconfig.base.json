@@ -17,7 +17,7 @@
       "@atom/contracts": ["packages/contracts/src/index.ts"],
       "@atom/catalog": ["packages/catalog/src/index.ts"],
       "@atom/blaise-engine": ["packages/blaise-engine/src/index.ts"],
-      "@atom/assets": ["packages/assets/src/manifest.ts"]
+      "@atom/assets": ["packages/assets/src/index.ts"]
     }
   }
 }

@@ -9,7 +9,7 @@ export default defineConfig({
       "@atom/contracts": r("./packages/contracts/src/index.ts"),
       "@atom/catalog": r("./packages/catalog/src/index.ts"),
       "@atom/blaise-engine": r("./packages/blaise-engine/src/index.ts"),
-      "@atom/assets": r("./packages/assets/src/manifest.ts"),
+      "@atom/assets": r("./packages/assets/src/index.ts"),
     },
   },
   test: {
