@@ -35,13 +35,18 @@ interface ElevationFrame {
   runM: number;
 }
 
-/** CCW loop from the SW corner; X east, Z north. */
+/**
+ * CCW loop from the SW corner; X east, Z north.
+ * rot is a three.js Y-rotation (positive = CCW seen from +Y), chosen so a
+ * part's local +X follows `dir` and its thickness (+Z) points INTO the
+ * building: rotY(270°) maps +X→+Z, rotY(90°) maps +X→−Z.
+ */
 function elevationFrames(L: number, W: number): Record<Elevation, ElevationFrame> {
   return {
     south: { origin: [0, 0, 0], dir: [1, 0, 0], rot: 0, runM: L },
-    east: { origin: [L, 0, 0], dir: [0, 0, 1], rot: 90, runM: W },
+    east: { origin: [L, 0, 0], dir: [0, 0, 1], rot: 270, runM: W },
     north: { origin: [L, 0, W], dir: [-1, 0, 0], rot: 180, runM: L },
-    west: { origin: [0, 0, W], dir: [0, 0, -1], rot: 270, runM: W },
+    west: { origin: [0, 0, W], dir: [0, 0, -1], rot: 90, runM: W },
   };
 }
 
