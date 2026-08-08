@@ -37,9 +37,6 @@ import {
 } from "./materials";
 import { groundColorMap, proceduralSky, roofNormalMap } from "./textures";
 
-/** Placeholder roof boxes rendered as a clean solid instead (below). */
-const ROOF_SOLID_PARTS = new Set(["roof-sheet-skillion", "capping-ridge", "capping-fascia"]);
-
 /** ¾-aerial hero pose (SPEC benchmark camera): 45° azimuth, 35° elevation. */
 export function benchmarkPose(view: { cx: number; cz: number; span: number }) {
   const d = view.span * 1.7;
@@ -125,10 +122,11 @@ function buildingPlacements(b: BuildingState): PlacedPart[] {
     manifest,
   );
   return result.placements.filter((p) => {
-    // roof sheets/cappings AND gutter/downpipe are drawn cleanly by
-    // <RoofSolid>; their placeholder boxes are excluded from the scene.
-    if (ROOF_SOLID_PARTS.has(p.partId)) return false;
-    if (p.partId === "barge-gutter-section" || p.partId === "downpipe") return false;
+    // Everything on the roof frame (sheets, cappings, gutter, fascia, cover
+    // flashing) plus the downpipe is drawn cleanly by <RoofSolid>; their
+    // placeholder boxes are excluded from the generic scene render.
+    if (getPart(manifest, p.partId).anchorFrame === "roof") return false;
+    if (p.partId === "downpipe-100x50") return false;
     return true;
   });
 }

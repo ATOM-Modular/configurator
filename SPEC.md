@@ -99,10 +99,11 @@ No whole-building model imports. Buildings are assembled at runtime from a small
 
 Structure & envelope:
 
-- `panel-wall-1200` — one 1200mm Askin EPS wall panel bay, 2700mm high, with real rib/joint profile (geometry or normal map). Tileable along X.
+- `panel-wall-1200` — one 1200mm Askin EPS wall panel bay, 2754mm to the eave, with real rib/joint profile (geometry or normal map). Tileable along X.
 - `panel-wall-cut` — parametric-width closer piece (code scales a plain panel ≤1200mm for the modulo remainder)
-- `flashing-corner`, `flashing-basechannel`, `flashing-tee-join` (multi-module joint cover)
-- `roof-sheet-skillion` — Colorbond sheet segment, tileable; `barge-gutter-section`, `downpipe`
+- `flashing-corner`, `flashing-basechannel`, `flashing-tee-join` (multi-module wall-line cover)
+- Roof (all `anchorFrame: roof`): `roof-sheet-dualfall` — Colorbond sheet, tileable, laid as a mirrored pair meeting at the mid-length ridge; `ridge-cap` (across the width at mid-length); `gutter-quad-end` (short ends only); `fascia-capping-raked` (long sides, follows the 2° rake); `barge-capping-end` (short ends, above the gutter); `cover-flashing-module-join` (longitudinal, only when width > 3.4m)
+- `downpipe-100x50` — 100×50 rectangular, `anchorFrame: wall`, at the end-wall corners
 - `chassis-edge` — visible chassis profile below floor line; `footing-surefoot` — footing block, vertically scalable to per-FFL height
 
 Openings (each replaces N wall-panel bays — no CSG):
@@ -122,16 +123,19 @@ Site kit:
 
 - Units: metres, real-world scale. glTF +Y up.
 - Origin: every part's origin at its SW-bottom attachment corner. Buildings assemble with origin at SW corner — matching the site coordinate convention (X east, Y north).
-- `packages/assets/manifest.json` is the single source of truth: per part — file, dimensions, tiling axis, anchor sockets, and the Blaise SKU(s) it represents. The 3D scene and the pricing request must derive from the same config state; the manifest maps config → meshes.
+- `packages/assets/manifest.json` is the single source of truth: per part — file, dimensions, tiling axis, anchor sockets, `anchorFrame`, and the Blaise SKU(s) it represents. The 3D scene and the pricing request must derive from the same config state; the manifest maps config → meshes.
+- `anchorFrame` (`wall` | `roof` | `ground`) declares which rect an instance's transform derives from: `wall` = building footprint rect at floor datum; `roof` = footprint + ~65mm oversail all sides; `ground` = footprint / site placement at ground level. `assets:check` fails any part missing it, and placeholder generators + assembly functions must position every instance against the declared frame's rect — never the other one.
+- Trim developed dimensions, bend angles and stock lengths live under `manifest.json` → `trimSpecs` (from Blaise's `roof-trim-specs.json`; placeholder values off the manufacture drawings until then). Panel-wrap legs are parametric on `panels.ceilingMm` (`leg = ceilingMm + wrapLapMm`) — never a hardcoded 50mm.
 - Budgets: ≤5,000 tris per part; full Zinfra site ≤150k tris on screen. Draco-compress geometry; KTX2/Basis textures; shared trim-sheet atlas for flashings.
 - Placeholder-first: ship procedural placeholder generators implementing the same manifest interface (simple extrusions with correct dimensions), so the app works before Blender assets exist and authored GLBs drop in with zero code change. Placeholders flagged `placeholder: true` in the manifest and rendered with a subtle wireframe overlay in internal mode.
 
 ### Assembly logic (in `apps/configurator`, pure functions, unit-tested)
 
 - Walls: tile `panel-wall-1200` along each elevation; modulo remainder uses `panel-wall-cut`. Openings snap to the 1200mm panel grid; placing a door/window swaps out the covered bays for the opening unit. (Mirrors real construction — window cutouts are +25mm in EPS, but visually the swap is sufficient.)
-- Width > 3.4m: repeat module envelope, insert `flashing-tee-join` at joins, single continuous roof.
+- Roof (ATOM standard, all parts on the roof rect): shallow **dual-fall** — ridge runs **across the width at mid-length**, 2° falling to the two **short ends** (`ridgeH = eave + tan(2°)·(L/2)`, eave 2754mm above FFL). Never a mono-skillion, never a fall across the width. One continuous roof over the whole footprint; corrugation ribs run **along the length** (parallel to fall); gutters (`gutter-quad-end`) across the **short ends only**, long sides carry `fascia-capping-raked` following the rake.
+- Width > 3.4m: repeat module envelope, insert `flashing-tee-join` at wall joins; the roof stays one continuous plane with a raised longitudinal `cover-flashing-module-join` at each module join — **no valley, no change in fall**.
 - Walkways: tile `rapta-walkway-bay` between two selected building edges; auto-count posts.
-- Footings: 6 blocks per module footprint (2×3 pattern), height = FFL − chassis allowance, from `footing-surefoot` scaled.
+- Footings: 6 blocks per module footprint (2×3 pattern), height = FFL − floor build-up, from `footing-surefoot` scaled.
 - Use `InstancedMesh` for repeated parts (panels, footings, balustrade posts).
 
 ### Rendering quality spec (this is where realism lives — do not skimp)

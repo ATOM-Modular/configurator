@@ -22,13 +22,12 @@ import { roofNormalMap, wallNormalMap, wallSeamMap } from "./textures";
 /** Parts whose colour follows the WALL selection. */
 export const WALL_PARTS = new Set(["panel-wall-1200", "panel-wall-cut"]);
 
-/** Parts whose colour follows the ROOF selection (Monument by default). */
+/**
+ * Generically-rendered parts that take the Monument steel treatment. Roof
+ * parts themselves are drawn by <RoofSolid> (not here); this set is the
+ * wall-frame flashings + chassis edge that still render as placeholder boxes.
+ */
 export const ROOF_PARTS = new Set([
-  "roof-sheet-skillion",
-  "capping-ridge",
-  "capping-fascia",
-  "barge-gutter-section",
-  "downpipe",
   "flashing-corner",
   "flashing-basechannel",
   "flashing-tee-join",

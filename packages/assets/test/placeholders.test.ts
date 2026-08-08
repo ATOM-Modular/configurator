@@ -32,6 +32,6 @@ describe("procedural placeholders — one per manifest part", () => {
   }
 
   it("covers every part in the kit", () => {
-    expect(manifest.parts).toHaveLength(31);
+    expect(manifest.parts).toHaveLength(33);
   });
 });

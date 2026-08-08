@@ -16,9 +16,8 @@ import {
   footingPositionsAlongLength,
   MODULE_WIDTH_M as SPEC_MODULE_WIDTH_M,
   PANEL_THICKNESS_M,
+  ROOF_PITCH_DEG,
   SINGLE_MODULE_MAX_WIDTH_M as SPEC_SINGLE_MODULE_MAX_WIDTH_M,
-  WALL_HEIGHT_EAVE_M,
-  WALL_HEIGHT_RIDGE_M,
 } from "../spec-constants.js";
 import { getPart, tileWallRun } from "./wall.js";
 import {
@@ -77,6 +76,26 @@ export function buildingModuleCount(widthM: number): number {
   return Math.ceil(widthM / MODULE_WIDTH_M);
 }
 
+/** Default roof oversail past the wall line, per side. [manifest trimSpecs] */
+export const ROOF_OVERSAIL_M = 0.065;
+
+export interface FrameRect {
+  x0: number;
+  x1: number;
+  z0: number;
+  z1: number;
+}
+
+/** Footprint rect — the datum for wall & ground parts. */
+export function wallRect(L: number, W: number): FrameRect {
+  return { x0: 0, x1: L, z0: 0, z1: W };
+}
+
+/** Footprint + oversail — the datum for roof parts. */
+export function roofRect(L: number, W: number, oversailM = ROOF_OVERSAIL_M): FrameRect {
+  return { x0: -oversailM, x1: L + oversailM, z0: -oversailM, z1: W + oversailM };
+}
+
 export function assembleBuilding(
   input: BuildingAssemblyInput,
   manifest: Manifest,
@@ -94,6 +113,24 @@ export function assembleBuilding(
     scale?: [number, number, number],
   ) => {
     placements.push(scale ? { partId, position, rotationYDeg, scale } : { partId, position, rotationYDeg });
+  };
+  // Frame-checked placement: a part MUST be positioned against the rect it
+  // declares in the manifest (wall / roof / ground). This catches a roof trim
+  // being placed off the wall rect (or vice-versa) at assembly time.
+  const placeIn = (
+    frame: "wall" | "roof" | "ground",
+    partId: string,
+    position: [number, number, number],
+    rotationYDeg: RotationYDeg = 0,
+    scale?: [number, number, number],
+  ) => {
+    const declared = getPart(manifest, partId).anchorFrame;
+    if (declared !== frame) {
+      throw new AssemblyError(
+        `part "${partId}" declares anchorFrame "${declared}" but assembly placed it on the ${frame} rect`,
+      );
+    }
+    place(partId, position, rotationYDeg, scale);
   };
 
   const frames = elevationFrames(L, W);
@@ -126,71 +163,80 @@ export function assembleBuilding(
         0,
         frame.origin[2] + frame.dir[2] * i * stepBase,
       ];
-      place("flashing-basechannel", x, frame.rot);
-      place("chassis-edge", [x[0], -getPart(manifest, "chassis-edge").dimensions.y, x[2]], frame.rot);
+      placeIn("wall", "flashing-basechannel", x, frame.rot);
+      placeIn("wall", "chassis-edge", [x[0], -getPart(manifest, "chassis-edge").dimensions.y, x[2]], frame.rot);
     }
   }
 
-  // --- Corner flashings ---
-  place("flashing-corner", [0, 0, 0], 0);
-  place("flashing-corner", [L, 0, 0], 90);
-  place("flashing-corner", [L, 0, W], 180);
-  place("flashing-corner", [0, 0, W], 270);
+  // --- Corner flashings (wall frame) ---
+  placeIn("wall", "flashing-corner", [0, 0, 0], 0);
+  placeIn("wall", "flashing-corner", [L, 0, 0], 90);
+  placeIn("wall", "flashing-corner", [L, 0, W], 180);
+  placeIn("wall", "flashing-corner", [0, 0, W], 270);
 
-  // --- Multi-module tee joins (vertical cover strip at each end wall) ---
+  // --- Multi-module tee joins (vertical wall-line cover strip) ---
   const modules = buildingModuleCount(W);
   for (let j = 1; j < modules; j++) {
     const zJoin = j * MODULE_WIDTH_M;
-    place("flashing-tee-join", [0, 0, zJoin], 0);
-    place("flashing-tee-join", [L, 0, zJoin], 180);
+    placeIn("wall", "flashing-tee-join", [0, 0, zJoin], 0);
+    placeIn("wall", "flashing-tee-join", [L, 0, zJoin], 180);
   }
 
-  // --- Roof: shallow 2° gable with the ridge running ACROSS the width at
-  //     mid-length, so both long walls carry the rake profile (panels step
-  //     2470 eave → 2570 ridge → 2470). Sheets tile along the length and
-  //     rise to the ridge; one row per module, one continuous plane.
-  //     [RhinoSite 6x3 panel heights; Central Darling roof plan "2° 2°"]
-  const roofPart = getPart(manifest, "roof-sheet-skillion");
-  const roofStep = roofPart.tileStepM ?? roofPart.dimensions.x;
-  const sheetsPerRow = Math.ceil(L / roofStep - 1e-9);
-  const ridgeRise = WALL_HEIGHT_RIDGE_M - WALL_HEIGHT_EAVE_M;
-  /** Height of the roof plane at distance x along the length. */
-  const roofY = (x: number) => {
-    const t = Math.min(1, Math.abs(x - L / 2) / (L / 2)); // 0 at ridge, 1 at eave
-    return wallH + ridgeRise * (1 - t);
-  };
-  for (let m = 0; m < modules; m++) {
-    for (let s = 0; s < sheetsPerRow; s++) {
-      const x = s * roofStep;
-      place("roof-sheet-skillion", [x, roofY(x), m * MODULE_WIDTH_M]);
+  // --- Roof (anchorFrame "roof", positioned on the ROOF rect = footprint +
+  //     oversail): ATOM dual-fall. Ridge runs ACROSS the width at MID-LENGTH,
+  //     2° falling to the two SHORT ends. Sheets run the length (down the
+  //     fall) as a mirrored pair meeting at the ridge; tiled across the width.
+  //     [Central Darling / RhinoSite / Air Liquide roof plans]
+  const oversailM = (manifest.trimSpecs?.oversailMm as number | undefined)
+    ? (manifest.trimSpecs!.oversailMm as number) / 1000
+    : ROOF_OVERSAIL_M;
+  const roof = roofRect(L, W, oversailM);
+  const ridgeH = wallH + Math.tan((ROOF_PITCH_DEG * Math.PI) / 180) * (L / 2);
+
+  const sheetStep = getPart(manifest, "roof-sheet-dualfall").tileStepM ?? 0.76;
+  const sheetsAcross = Math.ceil(W / sheetStep - 1e-9);
+  for (let s = 0; s < sheetsAcross; s++) {
+    const z = roof.z0 + s * sheetStep;
+    placeIn("roof", "roof-sheet-dualfall", [roof.x0, wallH, z]); // west half
+    placeIn("roof", "roof-sheet-dualfall", [L / 2, ridgeH, z], 180); // east half (mirror)
+  }
+
+  // ridge cap across the width at mid-length
+  placeIn("roof", "ridge-cap", [L / 2, ridgeH, roof.z0]);
+
+  // raking fascia along the two long sides (follows the 2° rake)
+  const fasciaStep = getPart(manifest, "fascia-capping-raked").tileStepM ?? 1.2;
+  const fasciaRun = Math.ceil((roof.x1 - roof.x0) / fasciaStep - 1e-9);
+  for (let i = 0; i < fasciaRun; i++) {
+    const x = roof.x0 + i * fasciaStep;
+    placeIn("roof", "fascia-capping-raked", [x, wallH, roof.z0], 0);
+    placeIn("roof", "fascia-capping-raked", [x, wallH, roof.z1], 180);
+  }
+
+  // gutter across each SHORT end + barge capping above it
+  placeIn("roof", "gutter-quad-end", [roof.x0, wallH, roof.z0], 0);
+  placeIn("roof", "gutter-quad-end", [roof.x1, wallH, roof.z0], 180);
+  placeIn("roof", "barge-capping-end", [roof.x0, ridgeH, roof.z0], 0);
+  placeIn("roof", "barge-capping-end", [roof.x1, ridgeH, roof.z0], 180);
+
+  // module-join cover flashing (longitudinal) — only when multi-module
+  const coverStep = getPart(manifest, "cover-flashing-module-join").tileStepM ?? 1.2;
+  for (let j = 1; j < modules; j++) {
+    const zJoin = j * MODULE_WIDTH_M;
+    for (let i = 0; i < Math.ceil(L / coverStep - 1e-9); i++) {
+      placeIn("roof", "cover-flashing-module-join", [i * coverStep, ridgeH - 0.05, zJoin]);
     }
   }
 
-  // Ridge capping along the ridge line; fascia capping along both long walls.
-  const ridgeStep = getPart(manifest, "capping-ridge").tileStepM ?? 1.2;
-  for (let i = 0; i < Math.ceil(W / ridgeStep - 1e-9); i++) {
-    place("capping-ridge", [L / 2, wallH + ridgeRise, i * ridgeStep]);
-  }
-  const fasciaStep = getPart(manifest, "capping-fascia").tileStepM ?? 1.2;
-  for (let i = 0; i < Math.ceil(L / fasciaStep - 1e-9); i++) {
-    const x = i * fasciaStep;
-    place("capping-fascia", [x, roofY(x), 0], 0);
-    place("capping-fascia", [x + fasciaStep, roofY(x), W], 180);
-  }
-
-  // --- Gutter along the north (low) edge + one downpipe per module ---
-  const gutterStep = getPart(manifest, "barge-gutter-section").tileStepM ?? 1.2;
-  for (let i = 0; i < Math.ceil(L / gutterStep - 1e-9); i++) {
-    place("barge-gutter-section", [i * gutterStep, wallH, W], 0);
-  }
-  const dpPart = getPart(manifest, "downpipe");
-  for (let m = 0; m < modules; m++) {
-    place(
-      "downpipe",
-      [L - dpPart.dimensions.x, 0, W],
-      0,
-      [1, wallH / dpPart.dimensions.y, 1],
-    );
+  // --- Downpipes (anchorFrame "wall", on the WALL rect): 100×50 at the
+  //     end-wall corners; 2 on multi-module. ---
+  const wallR = wallRect(L, W);
+  const downZ = modules > 1 ? [wallR.z0, wallR.z1] : [wallR.z0];
+  const dp = getPart(manifest, "downpipe-100x50");
+  for (const x of [wallR.x0, wallR.x1]) {
+    for (const z of downZ) {
+      placeIn("wall", "downpipe-100x50", [x, 0, z], 0, [1, wallH / dp.dimensions.y, 1]);
+    }
   }
 
   // --- Footings ---
@@ -227,7 +273,7 @@ export function assembleBuilding(
     ];
     for (const x of xs) {
       for (const z of zs) {
-        place("footing-surefoot", [x, -fflM, z], 0, [1, scaleY, 1]);
+        placeIn("ground", "footing-surefoot", [x, -fflM, z], 0, [1, scaleY, 1]);
       }
     }
   }

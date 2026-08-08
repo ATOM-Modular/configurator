@@ -52,7 +52,12 @@ function box(
 export function createPlaceholderPart(part: ManifestPart): Group {
   const group = new Group();
   group.name = part.id;
-  group.userData = { partId: part.id, placeholder: true, skus: part.skus };
+  group.userData = {
+    partId: part.id,
+    placeholder: true,
+    skus: part.skus,
+    anchorFrame: part.anchorFrame,
+  };
 
   const { x, y, z } = part.dimensions;
   const mat = material(part);

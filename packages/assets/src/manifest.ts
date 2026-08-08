@@ -25,6 +25,18 @@ export const manifestPartSchema = z.object({
   /** true ⇒ procedural placeholder; rendered with wireframe overlay in internal mode */
   placeholder: z.boolean(),
   category: z.enum(["structure", "opening", "roof", "sitekit", "service"]),
+  /**
+   * Which rect an instance's transform is derived from. Placeholder
+   * generators and assembly functions MUST position every instance against
+   * the rect matching this frame — never the other one:
+   *   wall   → building footprint rect (L × W) at floor datum: wall panels,
+   *            openings, corner/base flashings, chassis edge, downpipes
+   *   roof   → footprint + oversail (~65mm all sides): roof sheet, fascia,
+   *            barge, gutter, ridge cap, module-join cover flashing
+   *   ground → footprint / site placement at ground level: footings, tanks,
+   *            site kit
+   */
+  anchorFrame: z.enum(["wall", "roof", "ground"]),
   /** metres, glTF +Y up */
   dimensions: z.object({ x: z.number().positive(), y: z.number().positive(), z: z.number().positive() }),
   tilingAxis: z.enum(["x", "z", "none"]),
@@ -45,6 +57,22 @@ export const manifestPartSchema = z.object({
   replacesBays: z.number().int().positive().optional(),
 });
 
+/**
+ * Roof/wall trim developed dimensions, bend angles and stock lengths. The
+ * authoritative source is Blaise's `roof-trim-specs.json` (merged here under
+ * `trimSpecs`); until that lands these values are read off the manufacture
+ * drawings and flagged `placeholder`. Panel-wrap legs are parametric on
+ * `panels.ceilingMm` (leg = ceilingMm + wrapLapMm) — never a hardcoded 50mm.
+ */
+export const trimSpecsSchema = z
+  .object({
+    placeholder: z.boolean().optional(),
+    note: z.string().optional(),
+    oversailMm: z.number().nonnegative().optional(),
+    roofPitchDeg: z.number().optional(),
+  })
+  .catchall(z.unknown());
+
 export const manifestSchema = z
   .object({
     version: z.string(),
@@ -52,6 +80,7 @@ export const manifestSchema = z
     upAxis: z.literal("Y"),
     anchorConvention: z.literal("SW-bottom"),
     parts: z.array(manifestPartSchema).min(1),
+    trimSpecs: trimSpecsSchema.optional(),
   })
   .superRefine((m, ctx) => {
     const seen = new Set<string>();

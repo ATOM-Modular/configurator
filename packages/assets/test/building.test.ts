@@ -37,10 +37,25 @@ describe("building assembly — 6×3 office (Zinfra site office, FFL 765)", () =
     expect(footing.position[1]).toBeCloseTo(-0.765, 9);
   });
 
-  it("roofs the module: ceil(6/0.76) = 8 sheets, one gutter run, one downpipe", () => {
-    expect(r.counts["roof-sheet-skillion"]).toBe(8);
-    expect(r.counts["barge-gutter-section"]).toBe(5); // ceil(6/1.2)
-    expect(r.counts["downpipe"]).toBe(1);
+  it("roofs the module dual-fall: sheets, one ridge cap, end gutters, no cover", () => {
+    // sheets run the length as a mirrored pair, tiled across the width:
+    // 2 × ceil(3/0.76) = 8
+    expect(r.counts["roof-sheet-dualfall"]).toBe(8);
+    expect(r.counts["ridge-cap"]).toBe(1); // across the width at mid-length
+    expect(r.counts["gutter-quad-end"]).toBe(2); // one per SHORT end
+    expect(r.counts["barge-capping-end"]).toBe(2);
+    expect(r.counts["cover-flashing-module-join"]).toBeUndefined(); // single module
+    expect(r.counts["downpipe-100x50"]).toBe(2); // one per gutter
+  });
+
+  it("places every roof part on the oversailed roof rect (not the wall rect)", () => {
+    const oversail = 0.065;
+    for (const p of r.placements) {
+      if (p.partId.startsWith("roof-") || p.partId === "ridge-cap") {
+        expect(p.position[0]).toBeGreaterThanOrEqual(-oversail - 1e-9);
+        expect(p.position[0]).toBeLessThanOrEqual(6 + oversail + 1e-9);
+      }
+    }
   });
 });
 
@@ -51,10 +66,14 @@ describe("building assembly — multi-module (6×6, two modules)", () => {
     expect(r.counts["flashing-tee-join"]).toBe(2);
   });
 
-  it("doubles module-repeated parts: 12 footings, 2 roof rows, 2 downpipes", () => {
+  it("doubles module-repeated parts and adds a join cover flashing", () => {
     expect(r.counts["footing-surefoot"]).toBe(12);
-    expect(r.counts["roof-sheet-skillion"]).toBe(16); // 8 per module row
-    expect(r.counts["downpipe"]).toBe(2);
+    expect(r.counts["roof-sheet-dualfall"]).toBe(16); // 2 × ceil(6/0.76)
+    expect(r.counts["downpipe-100x50"]).toBe(4); // 2 per end on multi-module
+    // longitudinal cover flashing at the single module join — NO valley
+    expect(r.counts["cover-flashing-module-join"]).toBe(5); // ceil(6/1.2)
+    // still one continuous roof: a single ridge cap
+    expect(r.counts["ridge-cap"]).toBe(1);
   });
 });
 
@@ -81,5 +100,24 @@ describe("building assembly — openings and limits", () => {
     expect(() =>
       assembleBuilding({ lengthM: 6, widthM: 3, ffl_mm: 2000 }, manifest),
     ).toThrow(AssemblyError);
+  });
+});
+
+describe("manifest anchorFrame invariant", () => {
+  it("every part declares a frame", () => {
+    for (const part of manifest.parts) {
+      expect(["wall", "roof", "ground"]).toContain(part.anchorFrame);
+    }
+  });
+
+  it("every roof-category part sits in the roof frame", () => {
+    for (const part of manifest.parts) {
+      if (part.category === "roof") expect(part.anchorFrame).toBe("roof");
+    }
+  });
+
+  it("assembly places each part on the rect it declares (no throw)", () => {
+    // placeIn() throws if a part is positioned on the wrong frame's rect
+    expect(() => assembleBuilding({ lengthM: 9, widthM: 6, ffl_mm: 600 }, manifest)).not.toThrow();
   });
 });
