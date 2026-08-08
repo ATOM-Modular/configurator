@@ -61,5 +61,15 @@ export const COLORBOND_COLOURS: { name: string; hex: string }[] = [
   { name: "Monument", hex: "#323233" },
 ];
 
+/**
+ * Roof, cappings, gutter and downpipe are specified independently of the
+ * walls and are Monument on every drawing seen so far — the cream-wall /
+ * near-black-trim contrast is the strongest visual signature of an ATOM
+ * building, so it must be its own choice, not a tint of the wall colour.
+ * [Central Darling + RhinoSite ROOFING schedules: Roofing / Ridge Cap /
+ *  Gutter & Downpipe / Flashing all "Monument"]
+ */
+export const DEFAULT_ROOF_COLOUR = "Monument";
+
 export const PANEL_TYPES = ["EPS-FR", "EPS", "PIR"] as const;
 export const PANEL_THICKNESSES_MM = [50, 75, 100] as const;

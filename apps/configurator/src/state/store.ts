@@ -9,6 +9,7 @@ import {
   type WallOpeningSpec,
 } from "@atom/assets";
 import { walkwayGeometry } from "../site/geometry";
+import { DEFAULT_ROOF_COLOUR } from "./presets";
 import { defaultWindRegion, type AuState } from "./windRegion";
 
 const manifest = loadManifest();
@@ -58,6 +59,8 @@ export interface BuildingState {
   panelType: string;
   panelMm: number;
   colour: string;
+  /** Roof / cappings / gutter — specified separately from the walls. */
+  roofColour: string;
   gutters: boolean;
   openings: OpeningInstance[];
   partitionsX: number[];
@@ -139,7 +142,12 @@ export interface ConfiguratorState {
 
   // actions — active building detail
   setDims: (lengthM: number, widthM: number) => void;
-  setPanel: (p: { panelType?: string; panelMm?: number; colour?: string }) => void;
+  setPanel: (p: {
+    panelType?: string;
+    panelMm?: number;
+    colour?: string;
+    roofColour?: string;
+  }) => void;
   setGutters: (on: boolean) => void;
   setFfl: (mm: number) => void;
   setPendingOpening: (partId: string | null) => void;
@@ -207,6 +215,7 @@ export function makeBuilding(init: Partial<BuildingState> = {}): BuildingState {
     panelType: init.panelType ?? "EPS-FR",
     panelMm: init.panelMm ?? 50,
     colour: init.colour ?? "Surfmist",
+    roofColour: init.roofColour ?? DEFAULT_ROOF_COLOUR,
     gutters: init.gutters ?? true,
     openings: init.openings ?? [],
     partitionsX: init.partitionsX ?? [],

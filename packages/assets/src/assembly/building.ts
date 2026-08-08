@@ -17,6 +17,8 @@ import {
   MODULE_WIDTH_M as SPEC_MODULE_WIDTH_M,
   PANEL_THICKNESS_M,
   SINGLE_MODULE_MAX_WIDTH_M as SPEC_SINGLE_MODULE_MAX_WIDTH_M,
+  WALL_HEIGHT_EAVE_M,
+  WALL_HEIGHT_RIDGE_M,
 } from "../spec-constants.js";
 import { getPart, tileWallRun } from "./wall.js";
 import {
@@ -143,15 +145,37 @@ export function assembleBuilding(
     place("flashing-tee-join", [L, 0, zJoin], 180);
   }
 
-  // --- Roof: sheets tile along the length, one row per module, single
-  //     continuous plane over multi-module builds ---
+  // --- Roof: shallow 2° gable with the ridge running ACROSS the width at
+  //     mid-length, so both long walls carry the rake profile (panels step
+  //     2470 eave → 2570 ridge → 2470). Sheets tile along the length and
+  //     rise to the ridge; one row per module, one continuous plane.
+  //     [RhinoSite 6x3 panel heights; Central Darling roof plan "2° 2°"]
   const roofPart = getPart(manifest, "roof-sheet-skillion");
   const roofStep = roofPart.tileStepM ?? roofPart.dimensions.x;
   const sheetsPerRow = Math.ceil(L / roofStep - 1e-9);
+  const ridgeRise = WALL_HEIGHT_RIDGE_M - WALL_HEIGHT_EAVE_M;
+  /** Height of the roof plane at distance x along the length. */
+  const roofY = (x: number) => {
+    const t = Math.min(1, Math.abs(x - L / 2) / (L / 2)); // 0 at ridge, 1 at eave
+    return wallH + ridgeRise * (1 - t);
+  };
   for (let m = 0; m < modules; m++) {
     for (let s = 0; s < sheetsPerRow; s++) {
-      place("roof-sheet-skillion", [s * roofStep, wallH, m * MODULE_WIDTH_M]);
+      const x = s * roofStep;
+      place("roof-sheet-skillion", [x, roofY(x), m * MODULE_WIDTH_M]);
     }
+  }
+
+  // Ridge capping along the ridge line; fascia capping along both long walls.
+  const ridgeStep = getPart(manifest, "capping-ridge").tileStepM ?? 1.2;
+  for (let i = 0; i < Math.ceil(W / ridgeStep - 1e-9); i++) {
+    place("capping-ridge", [L / 2, wallH + ridgeRise, i * ridgeStep]);
+  }
+  const fasciaStep = getPart(manifest, "capping-fascia").tileStepM ?? 1.2;
+  for (let i = 0; i < Math.ceil(L / fasciaStep - 1e-9); i++) {
+    const x = i * fasciaStep;
+    place("capping-fascia", [x, roofY(x), 0], 0);
+    place("capping-fascia", [x + fasciaStep, roofY(x), W], 180);
   }
 
   // --- Gutter along the north (low) edge + one downpipe per module ---

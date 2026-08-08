@@ -816,6 +816,60 @@
         "HWS-GAS"
       ],
       "triBudget": 800
+    },
+    {
+      "id": "capping-ridge",
+      "file": "parts/capping-ridge.glb",
+      "placeholder": true,
+      "category": "roof",
+      "dimensions": {
+        "x": 0.55,
+        "y": 0.06,
+        "z": 1.2
+      },
+      "tilingAxis": "z",
+      "tileStepM": 1.2,
+      "anchors": [
+        {
+          "name": "south",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "ROOF-MODULE"
+      ],
+      "triBudget": 150
+    },
+    {
+      "id": "capping-fascia",
+      "file": "parts/capping-fascia.glb",
+      "placeholder": true,
+      "category": "roof",
+      "dimensions": {
+        "x": 1.2,
+        "y": 0.155,
+        "z": 0.32
+      },
+      "tilingAxis": "x",
+      "tileStepM": 1.2,
+      "anchors": [
+        {
+          "name": "west",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "ROOF-MODULE"
+      ],
+      "triBudget": 150
     }
   ]
 }

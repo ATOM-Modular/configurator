@@ -73,7 +73,7 @@ export function StructureTab() {
       </label>
 
       <fieldset className="swatches">
-        <legend>Colorbond colour</legend>
+        <legend>Wall panel colour</legend>
         {COLORBOND_COLOURS.map((c) => (
           <button
             key={c.name}
@@ -84,6 +84,20 @@ export function StructureTab() {
           />
         ))}
         <span className="swatch-name">{b.colour}</span>
+      </fieldset>
+
+      <fieldset className="swatches">
+        <legend>Roof, cappings &amp; gutter</legend>
+        {COLORBOND_COLOURS.map((c) => (
+          <button
+            key={c.name}
+            title={c.name}
+            className={`swatch ${b.roofColour === c.name ? "selected" : ""}`}
+            style={{ background: c.hex }}
+            onClick={() => s.setPanel({ roofColour: c.name })}
+          />
+        ))}
+        <span className="swatch-name">{b.roofColour}</span>
       </fieldset>
 
       <label>
