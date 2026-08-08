@@ -35,6 +35,8 @@ jobs:
       - name: Assets check
         run: pnpm assets:check
 
+      # Public build MUST NOT set VITE_INTERNAL — internal-only UI is aliased
+      # to a stub so cost/GP strings cannot reach the public bundle.
       - name: Build configurator (public bundle)
         run: pnpm --filter configurator --if-present build
 

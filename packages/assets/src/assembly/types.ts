@@ -16,6 +16,8 @@ export interface PlacedPart {
   rotationYDeg: RotationYDeg;
   /** per-axis scale for `scalable` parts (cut panels, footings) — omit for 1:1 */
   scale?: [number, number, number];
+  /** provenance for interaction (e.g. click-a-wall opening placement) */
+  meta?: { elevation?: Elevation; bay?: number };
 }
 
 export type Elevation = "south" | "east" | "north" | "west";

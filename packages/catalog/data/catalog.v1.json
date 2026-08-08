@@ -47,6 +47,10 @@
     "KITCHEN-2100": { "label": "Kitchenette 2100", "unit": "ea", "standardCost": 2800, "sellPrice": 4100, "placeholder": true },
     "KITCHEN-3600": { "label": "Kitchen 3600", "unit": "ea", "standardCost": 4300, "sellPrice": 6300, "placeholder": true },
 
+    "GPO-DOUBLE": { "label": "Double GPO", "unit": "ea", "standardCost": 45, "sellPrice": 70, "placeholder": true },
+    "LIGHT-LED-PANEL": { "label": "LED light panel", "unit": "ea", "standardCost": 85, "sellPrice": 130, "placeholder": true },
+    "DATA-POINT": { "label": "Data point", "unit": "ea", "standardCost": 60, "sellPrice": 95, "placeholder": true },
+
     "HWS-ELECTRIC": { "label": "Hot water system — electric", "unit": "ea", "standardCost": 950, "sellPrice": 1400, "placeholder": true },
     "HWS-GAS": { "label": "Hot water system — gas", "unit": "ea", "standardCost": 1600, "sellPrice": 2350, "placeholder": true },
 

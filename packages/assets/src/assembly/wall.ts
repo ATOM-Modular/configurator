@@ -25,6 +25,8 @@ export interface WallRunPlacement {
   xM: number;
   /** X scale for the cut panel (1 otherwise, omitted) */
   scaleX?: number;
+  /** bay index on the 1200mm grid (full panels and openings; absent on cuts) */
+  bay?: number;
 }
 
 export interface WallRunResult {
@@ -93,9 +95,9 @@ export function tileWallRun(
   for (let bay = 0; bay < fullPanels; bay++) {
     const opening = covered.get(bay);
     if (opening) {
-      placements.push({ partId: opening.partId, xM: bay * step });
+      placements.push({ partId: opening.partId, xM: bay * step, bay });
     } else if (!occupied.has(bay)) {
-      placements.push({ partId: WALL_PANEL_ID, xM: bay * step });
+      placements.push({ partId: WALL_PANEL_ID, xM: bay * step, bay });
     }
     // bays occupied by (but not starting) an opening emit nothing
   }

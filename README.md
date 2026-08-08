@@ -4,14 +4,14 @@ Web-based 3D modular-building configurator with live pricing and multi-building 
 
 **INTERNAL — cost/margin data must never reach the public bundle.** See Security below.
 
-## Status: M2 complete — assets + assembly
+## Status: M3 complete — single-building configurator
 
 | Milestone | Status |
 |---|---|
 | M1 Engine + API skeleton | ✅ done |
 | M2 Assets package + assembly | ✅ done |
-| M3 Single-building configurator | ⬜ next |
-| M4 Site mode (Zinfra acceptance) | ⬜ |
+| M3 Single-building configurator | ✅ done |
+| M4 Site mode (Zinfra acceptance) | ⬜ next |
 | M5 Outputs / export | ⬜ |
 
 All catalog rates are `PLACEHOLDER: true` — real rates arrive as a Blaise export replacing `packages/catalog/data/catalog.v1.json`.
@@ -49,9 +49,21 @@ INTERNAL_API_TOKEN=dev-secret pnpm --filter pricing-api dev
 # then send:  Authorization: Bearer dev-secret   with  "mode": "internal"
 ```
 
+## Configurator app (M3)
+
+Three-step wizard, URL-deep-linkable (`?step=3&state=VIC&postcode=3438&use=Office&l=6&w=3`):
+
+1. **Project setup** — state/postcode drives the wind-region default (overridable, then sticky); building use
+2. **Catalog** — module-increment size cards with footprint sketch, area, occupancy, module count, and a live indicative from-price fetched per card
+3. **Design** — 3D stage + Structure / Openings / Interior / Wet-areas tabs + docked price panel
+
+Openings are placed by selecting a type then **clicking a wall panel in the 3D view** (hover highlights; snaps to the 1200mm bay grid; overlaps rejected with a message). Interior partitions drag in a 2D floor-plan inset and drive per-zone AC and electrical. The price panel debounces 300ms, shows per-category subtotals, flashes a +/− delta, and renders engine warnings as amber chips.
+
+**Public vs internal builds.** The default build is public: sale prices only, "Get a detailed quote" CTA. `VITE_INTERNAL=true pnpm --filter configurator build` produces the internal build (bearer-token box, standard cost / GP% / cost-per-m², "Export estimate"). `vite.config.ts` aliases the internal metrics module to a stub in public builds so those field names are physically absent from the public bundle — verified by `pnpm check:no-cost-leak`.
+
 ## Security model
 
-1. **Package boundary** — `apps/configurator` can never import `@atom/blaise-engine` / `@atom/catalog` (ESLint `no-restricted-imports` + CI grep of the built bundle for `standardCost` / `gpPercent` / `costPerSqm`).
+1. **Package boundary** — `apps/configurator` can never import `@atom/blaise-engine` / `@atom/catalog` (ESLint `no-restricted-imports` + CI grep of the built bundle for `standardCost` / `gpPercent` / `costPerSqm`). Internal-only UI is excluded from public builds by module aliasing (see above).
 2. **Type-level split** — `PublicEstimate` vs `InternalEstimate` are separate interfaces; `toPublic()` constructs the public shape field-by-field (no spreads). Contract tests deep-scan serialized public responses for forbidden keys.
 3. **Auth** — internal mode is bearer-token gated and default-denies when `INTERNAL_API_TOKEN` is unset. M365 SSO planned.
 

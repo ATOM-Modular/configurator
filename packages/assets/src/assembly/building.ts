@@ -83,16 +83,17 @@ export function assembleBuilding(
     const openings = (input.openings ?? []).filter((o) => o.elevation === name);
     const run = tileWallRun(frame.runM, openings, manifest);
     for (const p of run.placements) {
-      place(
-        p.partId,
-        [
+      placements.push({
+        partId: p.partId,
+        position: [
           frame.origin[0] + frame.dir[0] * p.xM,
           0,
           frame.origin[2] + frame.dir[2] * p.xM,
         ],
-        frame.rot,
-        p.scaleX !== undefined ? [p.scaleX, 1, 1] : undefined,
-      );
+        rotationYDeg: frame.rot,
+        ...(p.scaleX !== undefined ? { scale: [p.scaleX, 1, 1] as [number, number, number] } : {}),
+        meta: { elevation: name, ...(p.bay !== undefined ? { bay: p.bay } : {}) },
+      });
     }
     // Base channel + chassis edge tile the same run (full sections; the
     // placeholder renderer tolerates the trailing overlap).
