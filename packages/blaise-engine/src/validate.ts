@@ -75,13 +75,15 @@ function validateBuilding(b: BuildingConfig): void {
       );
     }
   }
-  // Accessible sets only when the DDA flag is set (SPEC engine rules).
-  const hasAccessible = b.fitout.some((f) => f.sku === "BATH-ASSY-ACCESSIBLE");
-  if (hasAccessible && b.flags?.dda !== true) {
+  // Accessible sets and fixtures only when the DDA flag is set (SPEC engine rules).
+  const accessible = b.fitout.find(
+    (f) => f.sku === "BATH-ASSY-ACCESSIBLE" || f.sku.startsWith("BATH-ACC-"),
+  );
+  if (accessible && b.flags?.dda !== true) {
     throw new PricingValidationError(
       "VALIDATION_ERROR",
-      `Building "${b.id}" includes an accessible bathroom set but the DDA flag is not set`,
-      { buildingId: b.id, sku: "BATH-ASSY-ACCESSIBLE" },
+      `Building "${b.id}" includes accessible fixture "${accessible.sku}" but the DDA flag is not set`,
+      { buildingId: b.id, sku: accessible.sku },
     );
   }
 }

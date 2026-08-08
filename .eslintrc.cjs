@@ -14,8 +14,14 @@ module.exports = {
   ignorePatterns: ["dist/", "node_modules/", "*.cjs", "*.mjs"],
   overrides: [
     {
-      // The public app: hard boundary against engine/catalog.
-      files: ["apps/configurator/**/*.{ts,tsx}"],
+      // The public app's SHIPPED source: hard boundary against engine/catalog.
+      //
+      // Scoped to src/ deliberately. The rule exists to keep rates and cost
+      // logic out of the public bundle; apps/configurator/test/** is never
+      // bundled, and test-designs (e.g. Central Darling) legitimately price
+      // a configuration end-to-end to prove the config→estimate path. The
+      // built bundle is independently verified by scripts/check-no-cost-leak.
+      files: ["apps/configurator/src/**/*.{ts,tsx}"],
       rules: {
         "no-restricted-imports": [
           "error",

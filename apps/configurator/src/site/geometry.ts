@@ -49,6 +49,18 @@ export interface WalkwayLink {
   axis: WalkwayAxis;
   /** the two facing edges overlap over this span — used to centre the run */
   overlapM: number;
+  /**
+   * Area the shelter actually roofs: the span it bridges × the frontage it
+   * runs along. Pricing currently tiles bays across the SPAN only, so where
+   * the frontage exceeds one bay width this under-counts.
+   *
+   * Central Darling is the case in point: a 3m span across a 12m frontage
+   * roofs 36m², but span-only tiling bills 2 bays.
+   * OPEN [CHECK with Duane]: are Rapta shelters priced per bay, per lineal
+   * metre of frontage, or per m²? The rule can't be inferred from the
+   * drawings, so this figure is surfaced rather than guessed at.
+   */
+  coveredAreaM2: number;
 }
 
 /** Rapta walkway bay footprint (from the manifest part). */
@@ -75,7 +87,7 @@ export function walkwayGeometry(
     const gapM = right.x0 - left.x1;
     if (gapM <= 0) return null;
     const zStart = Math.max(fa.z0, fb.z0) + Math.max(0, (zOverlap - WALKWAY_WIDTH_M) / 2);
-    return { gapM, origin: [left.x1, 0, zStart], axis: "x", overlapM: zOverlap };
+    return { gapM, origin: [left.x1, 0, zStart], axis: "x", overlapM: zOverlap, coveredAreaM2: gapM * zOverlap };
   }
 
   // Facing along Z (their X ranges overlap)?
@@ -85,7 +97,7 @@ export function walkwayGeometry(
     const gapM = far.z0 - near.z1;
     if (gapM <= 0) return null;
     const xStart = Math.max(fa.x0, fb.x0) + Math.max(0, (xOverlap - WALKWAY_WIDTH_M) / 2);
-    return { gapM, origin: [xStart, 0, near.z1], axis: "z", overlapM: xOverlap };
+    return { gapM, origin: [xStart, 0, near.z1], axis: "z", overlapM: xOverlap, coveredAreaM2: gapM * xOverlap };
   }
 
   return null;

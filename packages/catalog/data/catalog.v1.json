@@ -51,6 +51,27 @@
     "LIGHT-LED-PANEL": { "label": "LED light panel", "unit": "ea", "standardCost": 85, "sellPrice": 130, "placeholder": true },
     "DATA-POINT": { "label": "Data point", "unit": "ea", "standardCost": 60, "sellPrice": 95, "placeholder": true },
 
+    "EXHAUST-FAN": { "label": "Exhaust fan", "unit": "ea", "standardCost": 110, "sellPrice": 170, "placeholder": true },
+    "LAUNDRY-TUB": { "label": "Standard tub and cabinet", "unit": "ea", "standardCost": 480, "sellPrice": 720, "placeholder": true },
+    "MIRROR-300": { "label": "Mirror 300×300", "unit": "ea", "standardCost": 55, "sellPrice": 85, "placeholder": true },
+    "TOWEL-DISPENSER": { "label": "Roll towel dispenser", "unit": "ea", "standardCost": 70, "sellPrice": 110, "placeholder": true },
+    "TOILET-ROLL-HOLDER": { "label": "Single toilet roll holder", "unit": "ea", "standardCost": 35, "sellPrice": 55, "placeholder": true },
+    "FLOOR-WASTE-100": { "label": "Square floor waste chrome 100mm", "unit": "ea", "standardCost": 60, "sellPrice": 95, "placeholder": true },
+    "TAP-POINT": { "label": "Tap point", "unit": "ea", "standardCost": 90, "sellPrice": 140, "placeholder": true },
+    "WATERPROOFING-M2": { "label": "Wet-area waterproofing", "unit": "m2", "standardCost": 55, "sellPrice": 85, "placeholder": true },
+
+    "BATH-ACC-TOILET": { "label": "Accessible toilet", "unit": "ea", "standardCost": 720, "sellPrice": 1080, "placeholder": true },
+    "BATH-ACC-BASIN": { "label": "Accessible basin (Caroma Urbane II)", "unit": "ea", "standardCost": 620, "sellPrice": 930, "placeholder": true },
+    "BATH-ACC-SHOWER": { "label": "Accessible shower set", "unit": "ea", "standardCost": 1150, "sellPrice": 1720, "placeholder": true },
+    "BATH-ACC-SHOWER-SEAT": { "label": "Accessible shower seat", "unit": "ea", "standardCost": 380, "sellPrice": 570, "placeholder": true },
+    "BATH-ACC-GRABRAIL": { "label": "Accessible toilet grabrail", "unit": "ea", "standardCost": 240, "sellPrice": 360, "placeholder": true },
+    "BATH-SHOWER-BASE-900": { "label": "Shower base 900×900", "unit": "ea", "standardCost": 420, "sellPrice": 630, "placeholder": true },
+
+    "RAMP-1500X2400": { "label": "Wheelchair ramp 1500×2400", "unit": "ea", "standardCost": 2100, "sellPrice": 3150, "placeholder": true },
+    "RAPTA-STEP-2200": { "label": "Rapta single steel step 2200mm", "unit": "ea", "standardCost": 1300, "sellPrice": 1950, "placeholder": true },
+    "WALKWAY-POST": { "label": "Walkway shelter post", "unit": "ea", "standardCost": 340, "sellPrice": 510, "placeholder": true },
+
+    "HWS-ELECTRIC-160L": { "label": "Hot water system — 160L electric", "unit": "ea", "standardCost": 1180, "sellPrice": 1750, "placeholder": true },
     "HWS-ELECTRIC": { "label": "Hot water system — electric", "unit": "ea", "standardCost": 950, "sellPrice": 1400, "placeholder": true },
     "HWS-GAS": { "label": "Hot water system — gas", "unit": "ea", "standardCost": 1600, "sellPrice": 2350, "placeholder": true },
 

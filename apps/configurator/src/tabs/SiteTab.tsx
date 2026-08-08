@@ -1,5 +1,6 @@
 import { footingSchedule, totalFootings, walkwayGeometry } from "../site/geometry";
 import { SITE_KIT_CATALOG } from "../site/siteKitCatalog";
+import { centralDarlingLoaded } from "../site/centralDarling";
 import { zinfraLoaded } from "../site/zinfra";
 import { useConfigurator } from "../state/store";
 
@@ -20,6 +21,7 @@ export function SiteTab() {
           {s.walkwayFromId ? "Cancel link" : "Walkway tool"}
         </button>
         <button onClick={() => s.loadSite(zinfraLoaded())}>Load Zinfra</button>
+        <button onClick={() => s.loadSite(centralDarlingLoaded())}>Load Central Darling</button>
       </div>
       {s.walkwayFromId && (
         <p className="place-hint">Click the building to connect to…</p>
@@ -72,7 +74,9 @@ export function SiteTab() {
               <span>
                 {from?.name} ↔ {to?.name}
                 <span className="muted">
-                  {link ? ` · ${link.gapM.toFixed(1)}m gap` : " · no facing edges"}
+                  {link
+                    ? ` · ${link.gapM.toFixed(1)}m span × ${link.overlapM.toFixed(1)}m frontage = ${link.coveredAreaM2.toFixed(0)}m² roofed`
+                    : " · no facing edges"}
                 </span>
               </span>
               <button onClick={() => s.toggleWalkwayElevated(w.id)}>
@@ -86,6 +90,12 @@ export function SiteTab() {
         })}
         {s.walkways.length === 0 && <li className="muted">None.</li>}
       </ul>
+      {s.walkways.length > 0 && (
+        <p className="warn-inline">
+          Walkway bays are counted across the span only — confirm whether Rapta
+          shelters price per bay, per lineal metre of frontage, or per m².
+        </p>
+      )}
 
       <h4>Site kit</h4>
       <div className="kit-palette">

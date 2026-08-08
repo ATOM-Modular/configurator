@@ -64,6 +64,13 @@ export interface BuildingState {
   roomMeta: RoomMeta[];
   wet: WetState;
   dda: boolean;
+  /**
+   * Line items that aren't covered by the wet/electrical builders — exhaust
+   * fans, laundry tubs, accessible fixtures, waterproofing, extra HWS.
+   * Real drawings schedule plenty of these, so the model needs a direct
+   * escape hatch rather than a checkbox for every fixture.
+   */
+  extraFitout: { sku: string; qty: number }[];
   placement: Placement;
 }
 
@@ -206,6 +213,7 @@ export function makeBuilding(init: Partial<BuildingState> = {}): BuildingState {
     roomMeta: init.roomMeta ?? [defaultRoom(0)],
     wet: init.wet ?? emptyWet(),
     dda: init.dda ?? false,
+    extraFitout: init.extraFitout ?? [],
     placement: init.placement ?? { xM: 0, zM: 0, rotationDeg: 0 },
   };
 }
@@ -595,6 +603,10 @@ function buildingFitout(b: BuildingState) {
   if (w.mfSets > 0) fitout.push({ sku: "BATH-ASSY-MF-STD", qty: w.mfSets });
   if (w.accessibleSets > 0) fitout.push({ sku: "BATH-ASSY-ACCESSIBLE", qty: w.accessibleSets });
   if (w.kitchen) fitout.push({ sku: `KITCHEN-${w.kitchen}`, qty: 1 });
+
+  for (const extra of b.extraFitout) {
+    if (extra.qty > 0) fitout.push({ sku: extra.sku, qty: extra.qty });
+  }
 
   return { rooms, fitout };
 }
