@@ -73,6 +73,14 @@ function instantiate(
   obj.position.set(...p.position);
   obj.rotation.y = MathUtils.degToRad(p.rotationYDeg);
   if (p.scale) obj.scale.set(...p.scale);
+  // Footings must reach the chassis underside — stretch to close the gap
+  // between the ground and the sub-floor beam (was rendering as stilts).
+  if (p.partId === "footing-surefoot") {
+    const fflLocal = -p.position[1];
+    const CHASSIS_H = 0.175;
+    const FOOTING_PART_H = 0.3;
+    obj.scale.y = Math.max(0.05, fflLocal - CHASSIS_H) / FOOTING_PART_H;
+  }
   obj.userData = { ...proto.userData, meta: p.meta, partId: p.partId };
 
   const isWall = WALL_PARTS.has(p.partId);
@@ -116,11 +124,10 @@ function buildingPlacements(b: BuildingState): PlacedPart[] {
     manifest,
   );
   return result.placements.filter((p) => {
-    // the stepped roof/capping boxes are replaced by <RoofSolid>
+    // roof sheets/cappings AND gutter/downpipe are drawn cleanly by
+    // <RoofSolid>; their placeholder boxes are excluded from the scene.
     if (ROOF_SOLID_PARTS.has(p.partId)) return false;
-    if (!b.gutters && (p.partId === "barge-gutter-section" || p.partId === "downpipe")) {
-      return false;
-    }
+    if (p.partId === "barge-gutter-section" || p.partId === "downpipe") return false;
     return true;
   });
 }
@@ -140,6 +147,8 @@ function RoofSolid({ b }: { b: BuildingState }) {
   const ohX = 0.15; // end (barge) overhang
   const ohZ = 0.2; // eave overhang
 
+  const fflM = b.ffl_mm / 1000;
+
   const geom = useMemo(() => {
     const P = [
       [-ohX, wallH, -ohZ], // A south eave, x-min
@@ -150,8 +159,10 @@ function RoofSolid({ b }: { b: BuildingState }) {
       [L + ohX, wallH, W + ohZ], // F north eave x-max
     ];
     const pos = new Float32Array(P.flat());
-    // u along length, v across the slope → corrugation ribs run down-slope
-    const uv = new Float32Array([0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0]);
+    // u across the width, v along the length → corrugation ribs run LONG ways
+    // (parallel to the ridge), the way long-run Colorbond is laid on a
+    // near-flat 2° cross-fall roof.
+    const uv = new Float32Array([0, 0, 0, 1, 0.5, 0, 0.5, 1, 1, 0, 1, 1]);
     const idx = [0, 1, 3, 0, 3, 2, 2, 3, 5, 2, 5, 4];
     const g = new BufferGeometry();
     g.setAttribute("position", new BufferAttribute(pos, 3));
@@ -164,13 +175,14 @@ function RoofSolid({ b }: { b: BuildingState }) {
   const mat = useMemo(() => {
     const normal = roofNormalMap().clone();
     normal.needsUpdate = true;
-    normal.repeat.set(Math.max(8, Math.round(L * 3)), 1);
+    // ribs repeat across the width → each rib runs the length of the roof
+    normal.repeat.set(Math.max(6, Math.round(W * 4)), 1);
     const m = steelMaterial(b.roofColour, false);
     m.normalMap = normal;
     m.normalScale = new Vector2(0.6, 0.6);
     m.side = DoubleSide;
     return m;
-  }, [b.roofColour, L]);
+  }, [b.roofColour, W]);
 
   const trim = useMemo(() => steelMaterial(b.roofColour, false), [b.roofColour]);
   const ridgeLen = L + 2 * ohX;
@@ -178,24 +190,39 @@ function RoofSolid({ b }: { b: BuildingState }) {
   return (
     <group>
       <mesh geometry={geom} material={mat} castShadow receiveShadow />
-      {/* ridge cap */}
-      <mesh position={[L / 2, ridgeY + 0.03, W / 2]} material={trim} castShadow>
-        <boxGeometry args={[ridgeLen, 0.05, 0.16]} />
+
+      {/* ridge cap along the length */}
+      <mesh position={[L / 2, ridgeY + 0.02, W / 2]} material={trim} castShadow>
+        <boxGeometry args={[ridgeLen, 0.04, 0.14]} />
       </mesh>
-      {/* fascia along both long eaves */}
-      <mesh position={[L / 2, wallH - 0.04, -ohZ]} material={trim} castShadow>
-        <boxGeometry args={[ridgeLen, 0.16, 0.04]} />
+
+      {/* barge/rake capping across the two 3m ends (over the ridge) */}
+      <mesh position={[-ohX, wallH + rise / 2, W / 2]} material={trim} castShadow>
+        <boxGeometry args={[0.05, 0.14, W + 2 * ohZ]} />
       </mesh>
-      <mesh position={[L / 2, wallH - 0.04, W + ohZ]} material={trim} castShadow>
-        <boxGeometry args={[ridgeLen, 0.16, 0.04]} />
+      <mesh position={[L + ohX, wallH + rise / 2, W / 2]} material={trim} castShadow>
+        <boxGeometry args={[0.05, 0.14, W + 2 * ohZ]} />
       </mesh>
-      {/* barge along both ends */}
-      <mesh position={[-ohX, ridgeY - rise / 2 - 0.02, W / 2]} material={trim} castShadow>
-        <boxGeometry args={[0.04, 0.16, W + 2 * ohZ]} />
-      </mesh>
-      <mesh position={[L + ohX, ridgeY - rise / 2 - 0.02, W / 2]} material={trim} castShadow>
-        <boxGeometry args={[0.04, 0.16, W + 2 * ohZ]} />
-      </mesh>
+
+      {b.gutters && (
+        <>
+          {/* box gutter along each long low eave */}
+          <mesh position={[L / 2, wallH - 0.05, -ohZ - 0.02]} material={trim} castShadow>
+            <boxGeometry args={[ridgeLen, 0.11, 0.11]} />
+          </mesh>
+          <mesh position={[L / 2, wallH - 0.05, W + ohZ + 0.02]} material={trim} castShadow>
+            <boxGeometry args={[ridgeLen, 0.11, 0.11]} />
+          </mesh>
+          {/* one downpipe at a rear corner, gutter → ground */}
+          <mesh
+            position={[L - 0.12, (wallH - fflM) / 2 - 0.05, W + ohZ + 0.04]}
+            material={trim}
+            castShadow
+          >
+            <boxGeometry args={[0.08, wallH + fflM, 0.06]} />
+          </mesh>
+        </>
+      )}
     </group>
   );
 }
