@@ -2,77 +2,71 @@ import { useMemo, useState } from "react";
 import { buildSiteConfig, useConfigurator } from "../state/store";
 import { ConfigStage } from "../scene/ConfigStage";
 import { PricePanel } from "../components/PricePanel";
+import { SiteCanvas } from "../site/SiteCanvas";
 import { StructureTab } from "../tabs/StructureTab";
 import { OpeningsTab } from "../tabs/OpeningsTab";
 import { InteriorTab } from "../tabs/InteriorTab";
 import { WetAreasTab } from "../tabs/WetAreasTab";
+import { SiteTab } from "../tabs/SiteTab";
 
-const TABS = [
-  { key: "structure", label: "Structure", el: <StructureTab /> },
-  { key: "openings", label: "Openings", el: <OpeningsTab /> },
-  { key: "interior", label: "Interior", el: <InteriorTab /> },
-  { key: "wet", label: "Wet areas", el: <WetAreasTab /> },
-] as const;
+type TabKey = "structure" | "openings" | "interior" | "wet" | "site";
+
+const TABS: { key: TabKey; label: string; siteOnly?: boolean }[] = [
+  { key: "structure", label: "Structure" },
+  { key: "openings", label: "Openings" },
+  { key: "interior", label: "Interior" },
+  { key: "wet", label: "Wet areas" },
+  { key: "site", label: "Site", siteOnly: true },
+];
 
 export function Step3Design() {
-  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("structure");
+  const [tab, setTab] = useState<TabKey>("structure");
   const s = useConfigurator();
 
   const site = useMemo(
     () =>
       buildSiteConfig({
-        use: s.use,
         windRegion: s.windRegion,
-        lengthM: s.lengthM,
-        widthM: s.widthM,
-        ffl_mm: s.ffl_mm,
-        panelType: s.panelType,
-        panelMm: s.panelMm,
-        colour: s.colour,
-        gutters: s.gutters,
-        openings: s.openings,
-        partitionsX: s.partitionsX,
-        roomMeta: s.roomMeta,
-        wet: s.wet,
-        dda: s.dda,
+        buildings: s.buildings,
+        siteKit: s.siteKit,
+        walkways: s.walkways,
+        mode: s.mode,
+        activeId: s.activeId,
       }),
-    [
-      s.use,
-      s.windRegion,
-      s.lengthM,
-      s.widthM,
-      s.ffl_mm,
-      s.panelType,
-      s.panelMm,
-      s.colour,
-      s.gutters,
-      s.openings,
-      s.partitionsX,
-      s.roomMeta,
-      s.wet,
-      s.dda,
-    ],
+    [s.windRegion, s.buildings, s.siteKit, s.walkways, s.mode, s.activeId],
   );
+
+  const visibleTabs = TABS.filter((t) => !t.siteOnly || s.mode === "site");
+  const current = visibleTabs.find((t) => t.key === tab) ?? visibleTabs[0]!;
 
   return (
     <section className="design-layout">
       <div className="config-tabs">
         <div className="tab-buttons">
-          {TABS.map((t) => (
+          {visibleTabs.map((t) => (
             <button
               key={t.key}
-              className={tab === t.key ? "active" : ""}
+              className={current.key === t.key ? "active" : ""}
               onClick={() => setTab(t.key)}
             >
               {t.label}
             </button>
           ))}
         </div>
-        {TABS.find((t) => t.key === tab)!.el}
+        {current.key === "structure" && <StructureTab />}
+        {current.key === "openings" && <OpeningsTab />}
+        {current.key === "interior" && <InteriorTab />}
+        {current.key === "wet" && <WetAreasTab />}
+        {current.key === "site" && <SiteTab />}
       </div>
 
       <div className="stage-wrap">
         <ConfigStage />
+        {s.mode === "site" && (
+          <div className="site-plan-overlay">
+            <SiteCanvas />
+          </div>
+        )}
       </div>
 
       <PricePanel site={site} />

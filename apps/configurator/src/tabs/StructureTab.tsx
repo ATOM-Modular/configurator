@@ -5,34 +5,35 @@ import {
   PANEL_THICKNESSES_MM,
   PANEL_TYPES,
 } from "../state/presets";
-import { useConfigurator } from "../state/store";
+import { useActiveBuilding, useConfigurator } from "../state/store";
 
 export function StructureTab() {
   const s = useConfigurator();
-  const modules = moduleCountFor(s.widthM);
+  const b = useActiveBuilding();
+  const modules = moduleCountFor(b.widthM);
 
   return (
     <div className="tab-body">
       <label>
-        Length: {s.lengthM.toFixed(1)}m
+        Length: {b.lengthM.toFixed(1)}m
         <input
           type="range"
           min={2.4}
           max={15}
           step={0.3}
-          value={s.lengthM}
-          onChange={(e) => s.setDims(Number(e.target.value), s.widthM)}
+          value={b.lengthM}
+          onChange={(e) => s.setDims(Number(e.target.value), b.widthM)}
         />
       </label>
       <label>
-        Width: {s.widthM.toFixed(1)}m
+        Width: {b.widthM.toFixed(1)}m
         <input
           type="range"
           min={2.4}
           max={9}
           step={0.3}
-          value={s.widthM}
-          onChange={(e) => s.setDims(s.lengthM, Number(e.target.value))}
+          value={b.widthM}
+          onChange={(e) => s.setDims(b.lengthM, Number(e.target.value))}
         />
       </label>
       <p className="module-feedback">
@@ -41,8 +42,20 @@ export function StructureTab() {
       </p>
 
       <label>
+        Floor level (FFL): {b.ffl_mm}mm
+        <input
+          type="range"
+          min={0}
+          max={1200}
+          step={5}
+          value={b.ffl_mm}
+          onChange={(e) => s.setFfl(Number(e.target.value))}
+        />
+      </label>
+
+      <label>
         Panel type
-        <select value={s.panelType} onChange={(e) => s.setPanel({ panelType: e.target.value })}>
+        <select value={b.panelType} onChange={(e) => s.setPanel({ panelType: e.target.value })}>
           {PANEL_TYPES.map((t) => (
             <option key={t}>{t}</option>
           ))}
@@ -50,7 +63,7 @@ export function StructureTab() {
       </label>
       <label>
         Panel thickness
-        <select value={s.panelMm} onChange={(e) => s.setPanel({ panelMm: Number(e.target.value) })}>
+        <select value={b.panelMm} onChange={(e) => s.setPanel({ panelMm: Number(e.target.value) })}>
           {PANEL_THICKNESSES_MM.map((t) => (
             <option key={t} value={t}>
               {t}mm
@@ -65,12 +78,12 @@ export function StructureTab() {
           <button
             key={c.name}
             title={c.name}
-            className={`swatch ${s.colour === c.name ? "selected" : ""}`}
+            className={`swatch ${b.colour === c.name ? "selected" : ""}`}
             style={{ background: c.hex }}
             onClick={() => s.setPanel({ colour: c.name })}
           />
         ))}
-        <span className="swatch-name">{s.colour}</span>
+        <span className="swatch-name">{b.colour}</span>
       </fieldset>
 
       <label>
@@ -83,10 +96,12 @@ export function StructureTab() {
       </label>
 
       <label className="checkbox">
-        <input type="checkbox" checked={s.gutters} onChange={(e) => s.setGutters(e.target.checked)} />
+        <input type="checkbox" checked={b.gutters} onChange={(e) => s.setGutters(e.target.checked)} />
         Gutters &amp; downpipes
       </label>
-      {!s.gutters && <p className="warn-inline">Removing stormwater management adds a site risk warning.</p>}
+      {!b.gutters && (
+        <p className="warn-inline">Removing stormwater management adds a site risk warning.</p>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useConfigurator, type WetState } from "../state/store";
+import { useActiveBuilding, useConfigurator, type WetState } from "../state/store";
 
 const ITEMS: { key: keyof Omit<WetState, "kitchen">; label: string }[] = [
   { key: "pans", label: "Toilet pans" },
@@ -11,7 +11,8 @@ const ITEMS: { key: keyof Omit<WetState, "kitchen">; label: string }[] = [
 ];
 
 export function WetAreasTab() {
-  const { wet, dda, setWet, setDda } = useConfigurator();
+  const { setWet, setDda } = useConfigurator();
+  const { wet, dda } = useActiveBuilding();
   const isWet =
     ITEMS.some((i) => wet[i.key] > 0) || wet.kitchen !== null;
   const gasLikely = wet.showers >= 3;

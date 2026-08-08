@@ -1,20 +1,21 @@
 import { useRef } from "react";
-import { deriveRooms, useConfigurator } from "../state/store";
+import { deriveRooms, useActiveBuilding, useConfigurator } from "../state/store";
 
 /** 2D floor-plan inset: rooms along the length, draggable partition lines. */
 function FloorPlan() {
   const s = useConfigurator();
-  const rooms = deriveRooms(s);
+  const b = useActiveBuilding();
+  const rooms = deriveRooms(b);
   const svgRef = useRef<SVGSVGElement>(null);
   const dragIndex = useRef<number | null>(null);
 
   const VIEW_W = 260;
-  const scale = VIEW_W / s.lengthM;
-  const viewH = s.widthM * scale;
+  const scale = VIEW_W / b.lengthM;
+  const viewH = b.widthM * scale;
 
   const toM = (clientX: number) => {
     const rect = svgRef.current!.getBoundingClientRect();
-    return ((clientX - rect.left) / rect.width) * s.lengthM;
+    return ((clientX - rect.left) / rect.width) * b.lengthM;
   };
 
   return (
@@ -34,7 +35,7 @@ function FloorPlan() {
           {r.name}
         </text>
       ))}
-      {s.partitionsX.map((x, i) => (
+      {b.partitionsX.map((x, i) => (
         <line
           key={i}
           x1={x * scale}
@@ -54,7 +55,8 @@ function FloorPlan() {
 
 export function InteriorTab() {
   const s = useConfigurator();
-  const rooms = deriveRooms(s);
+  const b = useActiveBuilding();
+  const rooms = deriveRooms(b);
 
   return (
     <div className="tab-body">
@@ -62,8 +64,8 @@ export function InteriorTab() {
         <FloorPlan />
         <div className="plan-actions">
           <button onClick={() => s.addPartition()}>+ Add partition</button>
-          {s.partitionsX.length > 0 && (
-            <button onClick={() => s.removePartition(s.partitionsX.length - 1)}>
+          {b.partitionsX.length > 0 && (
+            <button onClick={() => s.removePartition(b.partitionsX.length - 1)}>
               − Remove last
             </button>
           )}

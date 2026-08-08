@@ -11,13 +11,15 @@ import {
 } from "three";
 import {
   assembleBuilding,
+  assembleWalkway,
   createPlaceholderPart,
   getPart,
   loadManifest,
   type PlacedPart,
 } from "@atom/assets";
+import { footprint, walkwayGeometry } from "../site/geometry";
 import { COLORBOND_COLOURS } from "../state/presets";
-import { useConfigurator } from "../state/store";
+import { activeBuilding, useConfigurator, type BuildingState } from "../state/store";
 
 const manifest = loadManifest();
 const prototypes = new Map<string, Group>();
@@ -35,7 +37,7 @@ function colourHex(name: string): string {
   return COLORBOND_COLOURS.find((c) => c.name === name)?.hex ?? "#E4E2D5";
 }
 
-function instantiate(p: PlacedPart, wallColour: string): Group {
+function instantiate(p: PlacedPart, wallColour: string, dim: boolean): Group {
   let proto = prototypes.get(p.partId);
   if (!proto) {
     proto = createPlaceholderPart(getPart(manifest, p.partId));
@@ -54,49 +56,55 @@ function instantiate(p: PlacedPart, wallColour: string): Group {
     if (!mesh.isMesh) return;
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-    // per-instance materials so tint + hover highlights never bleed
     const mat = (mesh.material as MeshStandardMaterial).clone();
     if (wall) mat.color = new Color(colourHex(wallColour));
     if (trim) mat.color = new Color(colourHex(wallColour)).multiplyScalar(0.55);
+    if (dim) mat.color.multiplyScalar(0.75);
     mesh.material = mat;
   });
   return obj;
 }
 
-function BuildingModel() {
-  const lengthM = useConfigurator((s) => s.lengthM);
-  const widthM = useConfigurator((s) => s.widthM);
-  const ffl_mm = useConfigurator((s) => s.ffl_mm);
-  const colour = useConfigurator((s) => s.colour);
-  const gutters = useConfigurator((s) => s.gutters);
-  const openings = useConfigurator((s) => s.openings);
-  const partitionsX = useConfigurator((s) => s.partitionsX);
+function buildingPlacements(b: BuildingState): PlacedPart[] {
+  const result = assembleBuilding(
+    {
+      lengthM: b.lengthM,
+      widthM: b.widthM,
+      ffl_mm: b.ffl_mm,
+      openings: b.openings.map((o) => ({
+        elevation: o.elevation,
+        partId: o.partId,
+        startBay: o.startBay,
+      })),
+    },
+    manifest,
+  );
+  return b.gutters
+    ? result.placements
+    : result.placements.filter(
+        (p) => p.partId !== "barge-gutter-section" && p.partId !== "downpipe",
+      );
+}
+
+function BuildingModel({ b, interactive }: { b: BuildingState; interactive: boolean }) {
   const pending = useConfigurator((s) => s.pendingOpeningPartId);
   const placePendingOpening = useConfigurator((s) => s.placePendingOpening);
+  const selectBuilding = useConfigurator((s) => s.selectBuilding);
+  const activeId = useConfigurator((s) => s.activeId);
+  const mode = useConfigurator((s) => s.mode);
 
-  const objects = useMemo(() => {
-    const result = assembleBuilding(
-      {
-        lengthM,
-        widthM,
-        ffl_mm,
-        openings: openings.map((o) => ({
-          elevation: o.elevation,
-          partId: o.partId,
-          startBay: o.startBay,
-        })),
-      },
-      manifest,
-    );
-    const placements = gutters
-      ? result.placements
-      : result.placements.filter(
-          (p) => p.partId !== "barge-gutter-section" && p.partId !== "downpipe",
-        );
-    return placements.map((p) => instantiate(p, colour));
-  }, [lengthM, widthM, ffl_mm, colour, gutters, openings]);
+  const dim = mode === "site" && b.id !== activeId;
+
+  const objects = useMemo(
+    () => buildingPlacements(b).map((p) => instantiate(p, b.colour, dim)),
+    [b, dim],
+  );
 
   const onPointerDown = (e: ThreeEvent<PointerEvent>) => {
+    if (!interactive) {
+      selectBuilding(b.id);
+      return;
+    }
     if (!pending) return;
     const meta = e.eventObject.userData?.meta as
       | { elevation?: string; bay?: number }
@@ -109,7 +117,7 @@ function BuildingModel() {
   };
 
   const onPointerOver = (e: ThreeEvent<PointerEvent>) => {
-    if (!pending) return;
+    if (!interactive || !pending) return;
     if (e.eventObject.userData?.partId !== "panel-wall-1200") return;
     e.eventObject.traverse((c) => {
       const m = c as Mesh;
@@ -125,9 +133,12 @@ function BuildingModel() {
     document.body.style.cursor = "auto";
   };
 
-  const fflM = ffl_mm / 1000;
+  const f = footprint(b);
   return (
-    <group position={[0, fflM, 0]}>
+    <group
+      position={[b.placement.xM, b.ffl_mm / 1000, b.placement.zM]}
+      rotation={[0, MathUtils.degToRad(-b.placement.rotationDeg), 0]}
+    >
       {objects.map((o, i) => (
         <primitive
           key={i}
@@ -137,50 +148,137 @@ function BuildingModel() {
           onPointerOut={onPointerOut}
         />
       ))}
-      {/* interior partitions (visual only — rooms drive AC/electrical pricing) */}
-      {partitionsX.map((x, i) => (
-        <mesh key={`part-${i}`} position={[x, 1.35, widthM / 2]} castShadow>
-          <boxGeometry args={[0.09, 2.7, widthM - 0.1]} />
+      {b.partitionsX.map((x, i) => (
+        <mesh key={`part-${i}`} position={[x, 1.35, b.widthM / 2]} castShadow>
+          <boxGeometry args={[0.09, 2.7, b.widthM - 0.1]} />
           <meshStandardMaterial color={0xf2ebd8} roughness={0.9} />
         </mesh>
+      ))}
+      {/* keeps `f` meaningful for future selection outlines */}
+      <group visible={false} position={[f.x1 - f.x0, 0, f.z1 - f.z0]} />
+    </group>
+  );
+}
+
+function Walkways() {
+  const buildings = useConfigurator((s) => s.buildings);
+  const walkways = useConfigurator((s) => s.walkways);
+
+  const objects = useMemo(() => {
+    const out: Group[] = [];
+    for (const w of walkways) {
+      const from = buildings.find((b) => b.id === w.fromBuildingId);
+      const to = buildings.find((b) => b.id === w.toBuildingId);
+      if (!from || !to) continue;
+      const link = walkwayGeometry(from, to);
+      if (!link) continue;
+      // elevated runs sit at the higher of the two floor levels
+      const y = w.elevated ? Math.max(from.ffl_mm, to.ffl_mm) / 1000 : 0;
+      const run = assembleWalkway(
+        {
+          gapM: link.gapM,
+          origin: [link.origin[0], y, link.origin[2]],
+          rotationYDeg: link.axis === "x" ? 0 : 90,
+        },
+        manifest,
+      );
+      out.push(...run.placements.map((p) => instantiate(p, "Shale Grey", false)));
+    }
+    return out;
+  }, [buildings, walkways]);
+
+  return (
+    <group>
+      {objects.map((o, i) => (
+        <primitive key={i} object={o} />
+      ))}
+    </group>
+  );
+}
+
+function SiteKitModels() {
+  const siteKit = useConfigurator((s) => s.siteKit);
+  const objects = useMemo(
+    () =>
+      siteKit.map((k) =>
+        instantiate(
+          {
+            partId: k.partId,
+            position: [k.xM, 0, k.zM],
+            rotationYDeg: k.rotationDeg as 0 | 90 | 180 | 270,
+          },
+          "Shale Grey",
+          false,
+        ),
+      ),
+    [siteKit],
+  );
+  return (
+    <group>
+      {objects.map((o, i) => (
+        <primitive key={i} object={o} />
       ))}
     </group>
   );
 }
 
 export function ConfigStage() {
-  const lengthM = useConfigurator((s) => s.lengthM);
-  const widthM = useConfigurator((s) => s.widthM);
-  const camDist = Math.max(10, lengthM * 1.7);
+  const mode = useConfigurator((s) => s.mode);
+  const buildings = useConfigurator((s) => s.buildings);
+  const active = useConfigurator(activeBuilding);
+
+  const shown = mode === "site" ? buildings : [active];
+
+  // frame the camera on everything visible
+  const view = useMemo(() => {
+    let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+    for (const b of shown) {
+      const f = footprint(b);
+      x0 = Math.min(x0, f.x0); x1 = Math.max(x1, f.x1);
+      z0 = Math.min(z0, f.z0); z1 = Math.max(z1, f.z1);
+    }
+    const cx = (x0 + x1) / 2;
+    const cz = (z0 + z1) / 2;
+    const span = Math.max(x1 - x0, z1 - z0, 6);
+    return { cx, cz, span };
+  }, [shown]);
+
+  const dist = view.span * 1.5;
 
   return (
     <Canvas
       shadows
-      camera={{ position: [camDist, camDist * 0.55, -camDist * 0.8], fov: 42 }}
+      camera={{ position: [view.cx + dist, dist * 0.6, view.cz - dist * 0.8], fov: 42 }}
       gl={{ antialias: true, toneMapping: ACESFilmicToneMapping }}
     >
       <color attach="background" args={[0xcfd6dd]} />
       <hemisphereLight args={[0xdfe8f0, 0x8a8674, 1.25]} />
       <directionalLight
-        position={[20, 26, -14]}
+        position={[view.cx + 20, 30, view.cz - 16]}
         intensity={2.6}
         castShadow
         shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-16}
-        shadow-camera-right={16}
-        shadow-camera-top={16}
-        shadow-camera-bottom={-16}
+        shadow-camera-left={-30}
+        shadow-camera-right={30}
+        shadow-camera-top={30}
+        shadow-camera-bottom={-30}
       />
-      <BuildingModel />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[lengthM / 2, 0, widthM / 2]} receiveShadow>
-        <planeGeometry args={[60, 60]} />
+
+      {shown.map((b) => (
+        <BuildingModel key={b.id} b={b} interactive={mode === "single" || b.id === active.id} />
+      ))}
+      {mode === "site" && (
+        <>
+          <Walkways />
+          <SiteKitModels />
+        </>
+      )}
+
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[view.cx, 0, view.cz]} receiveShadow>
+        <planeGeometry args={[120, 120]} />
         <meshStandardMaterial color={0x77775f} roughness={1} metalness={0} />
       </mesh>
-      <OrbitControls
-        target={[lengthM / 2, 1.4, widthM / 2]}
-        maxPolarAngle={Math.PI / 2.05}
-        makeDefault
-      />
+      <OrbitControls target={[view.cx, 1.4, view.cz]} maxPolarAngle={Math.PI / 2.05} makeDefault />
     </Canvas>
   );
 }

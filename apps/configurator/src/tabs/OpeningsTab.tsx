@@ -1,4 +1,4 @@
-import { useConfigurator } from "../state/store";
+import { useActiveBuilding, useConfigurator } from "../state/store";
 
 const OPENING_TYPES = [
   { partId: "door-920-single", label: "Door 920 (closer)" },
@@ -10,14 +10,15 @@ const OPENING_TYPES = [
 ];
 
 export function OpeningsTab() {
-  const { openings, pendingOpeningPartId, openingError, setPendingOpening, removeOpening } =
+  const { pendingOpeningPartId, openingError, setPendingOpening, removeOpening } =
     useConfigurator();
+  const b = useActiveBuilding();
 
   return (
     <div className="tab-body">
       <p className="muted">
-        Pick a type, then <strong>click a wall panel</strong> in the 3D view to place it.
-        Openings snap to the 1200mm panel grid.
+        Pick a type, then <strong>click a wall panel</strong> in the 3D view to place it on{" "}
+        <strong>{b.name}</strong>. Openings snap to the 1200mm panel grid.
       </p>
       <div className="opening-types">
         {OPENING_TYPES.map((t) => (
@@ -37,9 +38,9 @@ export function OpeningsTab() {
       )}
       {openingError && <p className="warn-inline">{openingError}</p>}
 
-      <h4>Placed ({openings.length})</h4>
+      <h4>Placed ({b.openings.length})</h4>
       <ul className="opening-list">
-        {openings.map((o) => (
+        {b.openings.map((o) => (
           <li key={o.id}>
             <span>
               {OPENING_TYPES.find((t) => t.partId === o.partId)?.label ?? o.partId} — {o.elevation}{" "}
@@ -50,7 +51,7 @@ export function OpeningsTab() {
             </button>
           </li>
         ))}
-        {openings.length === 0 && <li className="muted">None yet.</li>}
+        {b.openings.length === 0 && <li className="muted">None yet.</li>}
       </ul>
     </div>
   );

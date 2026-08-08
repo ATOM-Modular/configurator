@@ -2,16 +2,33 @@ import { useEffect } from "react";
 import type { BuildingUse } from "@atom/contracts";
 import { Stepper } from "./components/Stepper";
 import { BUILDING_USES } from "./state/presets";
-import { useConfigurator, type WizardStep } from "./state/store";
+import { activeBuilding, useConfigurator, type WizardStep } from "./state/store";
 import { AU_STATES, type AuState } from "./state/windRegion";
 import { Step1Setup } from "./steps/Step1Setup";
 import { Step2Catalog } from "./steps/Step2Catalog";
 import { Step3Design } from "./steps/Step3Design";
 
+function ModeToggle() {
+  const mode = useConfigurator((s) => s.mode);
+  const setMode = useConfigurator((s) => s.setMode);
+  const step = useConfigurator((s) => s.step);
+  if (step !== 3) return null;
+  return (
+    <div className="mode-toggle">
+      {(["single", "site"] as const).map((m) => (
+        <button key={m} className={mode === m ? "active" : ""} onClick={() => setMode(m)}>
+          {m === "single" ? "Single building" : "Site"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** SPEC step 1: selections persist as URL query params (deep-linkable). */
 function useUrlSync() {
-  const { step, auState, postcode, use, lengthM, widthM, setStep, setSetup, setDims } =
-    useConfigurator();
+  const { step, auState, postcode, use, setStep, setSetup, setDims } = useConfigurator();
+  const lengthM = useConfigurator((s) => activeBuilding(s).lengthM);
+  const widthM = useConfigurator((s) => activeBuilding(s).widthM);
 
   // hydrate once from the URL
   useEffect(() => {
@@ -58,6 +75,7 @@ export default function App() {
       <header className="topbar">
         <span className="brand">ATOM MODULAR</span>
         <Stepper />
+        <ModeToggle />
       </header>
       <main className={`content step-${step}`}>
         {step === 1 && <Step1Setup />}
