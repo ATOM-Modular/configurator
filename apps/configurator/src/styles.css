@@ -314,3 +314,68 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
   padding: 6px 12px; font-size: 12px;
 }
 .stage-controls button:hover { border-color: var(--accent); color: #fff; }
+
+/* ================= one-page studio ================= */
+.studio { display: flex; flex-direction: column; height: 100%; }
+.studio-top {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 8px 16px; background: var(--bg); border-bottom: 2px solid var(--accent);
+}
+.studio-scope, .studio-view { display: flex; gap: 2px; }
+.studio-scope button, .studio-view button {
+  background: var(--surface-raised); border: 1px solid var(--border); color: var(--text-muted);
+  padding: 5px 12px; font-size: 12px;
+}
+.studio-scope button:first-child, .studio-view button:first-child { border-radius: 6px 0 0 6px; }
+.studio-scope button:last-child, .studio-view button:last-child { border-radius: 0 6px 6px 0; }
+.studio-scope button.active, .studio-view button.active {
+  background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700;
+}
+.studio-region { flex-direction: row; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+.studio-region select { width: 80px; }
+.studio-buildings { display: flex; gap: 4px; margin-left: auto; }
+.studio-buildings button {
+  background: var(--surface-raised); border: 1px solid var(--border); color: var(--text);
+  border-radius: 6px; padding: 4px 10px; font-size: 12px;
+}
+.studio-buildings button.active { border-color: var(--accent); color: var(--accent); }
+
+.studio-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 210px 1fr 300px; }
+.studio-stage { position: relative; min-width: 0; background: var(--bg); }
+.studio-stage canvas { display: block; }
+
+.studio-catalogue { border-right: 1px solid var(--border); overflow-y: auto; padding: 12px; }
+.studio-catalogue h2 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
+.cat-group { margin-top: 12px; }
+.cat-group-title { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+.cat-items { display: flex; flex-direction: column; gap: 5px; }
+.cat-card {
+  display: flex; align-items: center; gap: 8px; text-align: left;
+  background: var(--surface-raised); border: 1px solid var(--border); color: var(--text);
+  border-radius: 8px; padding: 7px 9px; font-size: 12px; cursor: grab;
+}
+.cat-card:hover { border-color: var(--accent); }
+.cat-card:active { cursor: grabbing; }
+.cat-card .ti { color: var(--accent); font-size: 15px; }
+
+.site-drop { width: 100%; height: 100%; display: flex; flex-direction: column; }
+.site-drop .site-canvas { flex: 1; }
+
+.building-plan-wrap { padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; height: 100%; }
+.building-plan { width: 100%; max-width: 360px; background: var(--grey-900); border-radius: 6px; }
+.plan-room { fill: var(--grey-800); stroke: var(--border); stroke-width: 0.03; }
+.plan-room:hover { fill: var(--grey-700); }
+.plan-room-name { fill: var(--text-muted); font-size: 0.28px; text-anchor: middle; pointer-events: none; }
+.plan-outline { fill: none; stroke: var(--accent); stroke-width: 0.06; pointer-events: none; }
+.plan-opening { fill: #85B7EB; pointer-events: none; }
+.room-badges { display: flex; gap: 12px; flex-wrap: wrap; }
+.room-badge-col { min-width: 150px; }
+.room-badge-title { font-size: 12px; color: var(--accent); margin-bottom: 4px; }
+.room-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 0; }
+.room-badge .ti { color: var(--text-muted); }
+.rb-label { flex: 1; }
+.rb-qty { min-width: 16px; text-align: center; }
+.room-badge button {
+  width: 20px; height: 20px; border: 1px solid var(--border); background: var(--surface-raised);
+  color: var(--text); border-radius: 4px; line-height: 1;
+}

@@ -84,6 +84,12 @@ export interface BuildingState {
    * escape hatch rather than a checkbox for every fixture.
    */
   extraFitout: { sku: string; qty: number }[];
+  /**
+   * Studio drag-and-drop counted items: roomId → (sku → qty). This is the
+   * Blaise count-per-room model — position is cosmetic, the count drives the
+   * price. Populated by the one-page catalogue; empty for wizard buildings.
+   */
+  roomCounts: Record<string, Record<string, number>>;
   placement: Placement;
 }
 
@@ -109,9 +115,17 @@ export interface WalkwayRun {
 export type WizardStep = 1 | 2 | 3;
 export type SiteMode = "single" | "site";
 
+/** One-page studio: which level you're looking at, and how it's drawn. */
+export type StudioScope = "site" | "building";
+export type StudioView = "2d" | "3d";
+
 export interface ConfiguratorState {
   step: WizardStep;
   mode: SiteMode;
+
+  // one-page studio view state
+  scope: StudioScope;
+  view: StudioView;
 
   // site-level
   auState: AuState;
@@ -141,6 +155,21 @@ export interface ConfiguratorState {
   setSetup: (p: { auState?: AuState; postcode?: string; use?: BuildingUse }) => void;
   setWindRegion: (w: WindRegion) => void;
   setInternalToken: (token: string) => void;
+
+  // actions — one-page studio
+  setScope: (s: StudioScope) => void;
+  setView: (v: StudioView) => void;
+  /** Drag a chassis from the catalogue onto the site → a blank building. */
+  addChassis: (init: {
+    lengthM: number;
+    widthM: number;
+    chassisType: "office" | "toilet";
+    xM?: number;
+    zM?: number;
+  }) => string;
+  /** Room-drop a counted catalogue item; delta increments/decrements. */
+  dropCounted: (roomId: string, sku: string, delta: number) => void;
+  setCountedQty: (roomId: string, sku: string, qty: number) => void;
 
   // actions — buildings
   addBuilding: (init?: Partial<BuildingState>) => string;
@@ -237,6 +266,7 @@ export function makeBuilding(init: Partial<BuildingState> = {}): BuildingState {
     wet: init.wet ?? emptyWet(),
     dda: init.dda ?? false,
     extraFitout: init.extraFitout ?? [],
+    roomCounts: init.roomCounts ?? {},
     placement: init.placement ?? { xM: 0, zM: 0, rotationDeg: 0 },
   };
 }
@@ -289,6 +319,9 @@ export const useConfigurator = create<ConfiguratorState>((set, get) => {
     step: 1,
     mode: "single",
 
+    scope: "building",
+    view: "3d",
+
     auState: "VIC",
     postcode: "3438",
     windRegion: "AB",
@@ -310,6 +343,58 @@ export const useConfigurator = create<ConfiguratorState>((set, get) => {
 
     setStep: (step) => set({ step }),
     setMode: (mode) => set({ mode, walkwayFromId: null, siteError: null }),
+
+    setScope: (scope) => set({ scope }),
+    setView: (view) => set({ view }),
+
+    addChassis: ({ lengthM, widthM, chassisType, xM, zM }) => {
+      const s = get();
+      const maxX = s.buildings.reduce((m, b) => Math.max(m, b.placement.xM + b.lengthM), 0);
+      // studio buildings start blank — you drag in every fit-out item
+      const building = makeBuilding({
+        name: `Building ${s.buildings.length + 1}`,
+        use: chassisType === "toilet" ? "Toilet & Amenities" : "Office",
+        lengthM,
+        widthM,
+        roomMeta: [{ name: "Zone 1", gpoQty: 0, lightQty: 0, dataQty: 0, acOverrideKw: null }],
+        placement: {
+          xM: xM !== undefined ? snap(xM) : snap(maxX + 4),
+          zM: zM !== undefined ? snap(zM) : 0,
+          rotationDeg: 0,
+        },
+      });
+      set({
+        buildings: [...s.buildings, building],
+        activeId: building.id,
+        scope: "building",
+      });
+      return building.id;
+    },
+
+    dropCounted: (roomId, sku, delta) =>
+      set(() =>
+        patchActive((b) => {
+          const room = { ...(b.roomCounts[roomId] ?? {}) };
+          const next = Math.max(0, (room[sku] ?? 0) + delta);
+          if (next === 0) delete room[sku];
+          else room[sku] = next;
+          const roomCounts = { ...b.roomCounts, [roomId]: room };
+          if (Object.keys(room).length === 0) delete roomCounts[roomId];
+          return { roomCounts };
+        }),
+      ),
+
+    setCountedQty: (roomId, sku, qty) =>
+      set(() =>
+        patchActive((b) => {
+          const room = { ...(b.roomCounts[roomId] ?? {}) };
+          if (qty <= 0) delete room[sku];
+          else room[sku] = qty;
+          const roomCounts = { ...b.roomCounts, [roomId]: room };
+          if (Object.keys(room).length === 0) delete roomCounts[roomId];
+          return { roomCounts };
+        }),
+      ),
 
     setSetup: (p) =>
       set((s) => {
@@ -644,6 +729,13 @@ function buildingFitout(b: BuildingState) {
 
   for (const extra of b.extraFitout) {
     if (extra.qty > 0) fitout.push({ sku: extra.sku, qty: extra.qty });
+  }
+
+  // Studio room-drop counted items (Blaise count-per-room).
+  for (const [roomId, counts] of Object.entries(b.roomCounts)) {
+    for (const [sku, qty] of Object.entries(counts)) {
+      if (qty > 0) fitout.push({ sku, qty, roomId });
+    }
   }
 
   return { rooms, fitout };

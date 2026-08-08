@@ -195,6 +195,35 @@ describe("multi-building site state", () => {
     expect(s.siteError).toMatch(/already linked/);
   });
 
+  it("addChassis creates a blank building and drives scope to building", () => {
+    const n0 = useConfigurator.getState().buildings.length;
+    const id = useConfigurator.getState().addChassis({ lengthM: 4.8, widthM: 3, chassisType: "toilet" });
+    const s = useConfigurator.getState();
+    expect(s.buildings).toHaveLength(n0 + 1);
+    expect(s.activeId).toBe(id);
+    expect(s.scope).toBe("building");
+    const b = s.buildings.find((x) => x.id === id)!;
+    expect(b.lengthM).toBe(4.8);
+    // blank fit-out: no default lights/gpo
+    expect(b.roomMeta[0]!.lightQty).toBe(0);
+    expect(b.roomMeta[0]!.gpoQty).toBe(0);
+  });
+
+  it("room-drop counts increment/decrement and reach the priced fitout", () => {
+    const roomId = deriveRooms(active())[0]!.id;
+    useConfigurator.getState().dropCounted(roomId, "LIGHT-LED-PANEL", 1);
+    useConfigurator.getState().dropCounted(roomId, "LIGHT-LED-PANEL", 1);
+    useConfigurator.getState().dropCounted(roomId, "GPO-DOUBLE", 1);
+    expect(active().roomCounts[roomId]!["LIGHT-LED-PANEL"]).toBe(2);
+
+    const fitout = siteConfig().buildings[0]!.fitout;
+    expect(fitout.find((f) => f.sku === "LIGHT-LED-PANEL" && f.roomId === roomId)?.qty).toBe(2);
+
+    // decrement to zero removes the line
+    useConfigurator.getState().dropCounted(roomId, "GPO-DOUBLE", -1);
+    expect(active().roomCounts[roomId]?.["GPO-DOUBLE"]).toBeUndefined();
+  });
+
   it("wind region C/D enforces Blaise panel-thickness minimums", () => {
     useConfigurator.getState().setWindRegion("D");
     expect(active().panelMm).toBeGreaterThanOrEqual(200);

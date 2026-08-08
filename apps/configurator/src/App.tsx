@@ -8,6 +8,7 @@ import { AU_STATES, type AuState } from "./state/windRegion";
 import { Step1Setup } from "./steps/Step1Setup";
 import { Step2Catalog } from "./steps/Step2Catalog";
 import { Step3Design } from "./steps/Step3Design";
+import { StudioPage } from "./studio/StudioPage";
 
 function ModeToggle() {
   const mode = useConfigurator((s) => s.mode);
@@ -67,7 +68,18 @@ function useUrlSync() {
   }, [step, auState, postcode, use, lengthM, widthM]);
 }
 
+/** Feature flag: ?studio=1 opens the one-page drag-and-drop configurator. */
+function useStudioFlag(): boolean {
+  return new URLSearchParams(window.location.search).get("studio") === "1";
+}
+
 export default function App() {
+  const studio = useStudioFlag();
+  if (studio) return <StudioPage />;
+  return <Wizard />;
+}
+
+function Wizard() {
   useUrlSync();
   const step = useConfigurator((s) => s.step);
 
