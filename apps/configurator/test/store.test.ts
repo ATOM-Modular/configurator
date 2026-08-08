@@ -209,19 +209,31 @@ describe("multi-building site state", () => {
     expect(b.roomMeta[0]!.gpoQty).toBe(0);
   });
 
-  it("room-drop counts increment/decrement and reach the priced fitout", () => {
-    const roomId = deriveRooms(active())[0]!.id;
-    useConfigurator.getState().dropCounted(roomId, "LIGHT-LED-PANEL", 1);
-    useConfigurator.getState().dropCounted(roomId, "LIGHT-LED-PANEL", 1);
-    useConfigurator.getState().dropCounted(roomId, "GPO-DOUBLE", 1);
-    expect(active().roomCounts[roomId]!["LIGHT-LED-PANEL"]).toBe(2);
+  it("placed fit-out objects count per SKU into the priced fitout", () => {
+    // studio buildings are blank (addChassis) — placed items are the only fit-out
+    useConfigurator.getState().addChassis({ lengthM: 6, widthM: 3, chassisType: "office" });
+    useConfigurator.getState().placeItem("LIGHT-LED-PANEL", 1, 1);
+    useConfigurator.getState().placeItem("LIGHT-LED-PANEL", 2, 1);
+    const gpoId = useConfigurator.getState().placeItem("GPO-DOUBLE", 3, 1);
+    expect(active().placedItems).toHaveLength(3);
 
-    const fitout = siteConfig().buildings[0]!.fitout;
-    expect(fitout.find((f) => f.sku === "LIGHT-LED-PANEL" && f.roomId === roomId)?.qty).toBe(2);
+    const b = siteConfig().buildings.find((x) => x.id === useConfigurator.getState().activeId)!;
+    expect(b.fitout.find((f) => f.sku === "LIGHT-LED-PANEL")?.qty).toBe(2);
+    expect(b.fitout.find((f) => f.sku === "GPO-DOUBLE")?.qty).toBe(1);
 
-    // decrement to zero removes the line
-    useConfigurator.getState().dropCounted(roomId, "GPO-DOUBLE", -1);
-    expect(active().roomCounts[roomId]?.["GPO-DOUBLE"]).toBeUndefined();
+    // objects move and delete
+    useConfigurator.getState().moveItem(gpoId, 4.24, 1.17);
+    const moved = active().placedItems.find((p) => p.id === gpoId)!;
+    expect(moved.xM).toBeCloseTo(4.2, 9); // 0.1m snap
+    useConfigurator.getState().removeItem(gpoId);
+    expect(active().placedItems.some((p) => p.id === gpoId)).toBe(false);
+  });
+
+  it("drawn internal walls price by l.m. (Blaise Internal Walls Lm)", () => {
+    useConfigurator.getState().addWall(0, 1.5, 3, 1.5); // 3.0m
+    useConfigurator.getState().addWall(1.5, 0, 1.5, 2); // 2.0m
+    const line = siteConfig().buildings[0]!.fitout.find((f) => f.sku === "INTERNAL-WALL-LM")!;
+    expect(line.qty).toBeCloseTo(5.0, 6);
   });
 
   it("wind region C/D enforces Blaise panel-thickness minimums", () => {

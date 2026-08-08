@@ -85,12 +85,34 @@ export interface BuildingState {
    */
   extraFitout: { sku: string; qty: number }[];
   /**
-   * Studio drag-and-drop counted items: roomId → (sku → qty). This is the
-   * Blaise count-per-room model — position is cosmetic, the count drives the
-   * price. Populated by the one-page catalogue; empty for wizard buildings.
+   * Floorplanner-style placed fit-out — each item is a positioned object you
+   * move / rotate / delete. Price derives from the count per SKU (Blaise count
+   * model); position is real and feeds the 3D. Empty for wizard buildings.
    */
-  roomCounts: Record<string, Record<string, number>>;
+  placedItems: PlacedItem[];
+  /** Drawn internal-wall segments (building-local metres). Blaise: Internal Walls Lm. */
+  internalWalls: WallSegment[];
   placement: Placement;
+}
+
+export interface PlacedItem {
+  id: string;
+  sku: string;
+  xM: number;
+  zM: number;
+  rotationDeg: number;
+}
+
+export interface WallSegment {
+  id: string;
+  x1: number;
+  z1: number;
+  x2: number;
+  z2: number;
+}
+
+export function wallLengthM(w: WallSegment): number {
+  return Math.hypot(w.x2 - w.x1, w.z2 - w.z1);
 }
 
 export interface SiteKitItem {
@@ -167,9 +189,14 @@ export interface ConfiguratorState {
     xM?: number;
     zM?: number;
   }) => string;
-  /** Room-drop a counted catalogue item; delta increments/decrements. */
-  dropCounted: (roomId: string, sku: string, delta: number) => void;
-  setCountedQty: (roomId: string, sku: string, qty: number) => void;
+  /** Placed fit-out (Floorplanner-style positioned objects). */
+  placeItem: (sku: string, xM: number, zM: number) => string;
+  moveItem: (id: string, xM: number, zM: number) => void;
+  rotateItem: (id: string, deltaDeg: number) => void;
+  removeItem: (id: string) => void;
+  /** Drawn internal-wall segments. */
+  addWall: (x1: number, z1: number, x2: number, z2: number) => void;
+  removeWall: (id: string) => void;
 
   // actions — buildings
   addBuilding: (init?: Partial<BuildingState>) => string;
@@ -266,7 +293,8 @@ export function makeBuilding(init: Partial<BuildingState> = {}): BuildingState {
     wet: init.wet ?? emptyWet(),
     dda: init.dda ?? false,
     extraFitout: init.extraFitout ?? [],
-    roomCounts: init.roomCounts ?? {},
+    placedItems: init.placedItems ?? [],
+    internalWalls: init.internalWalls ?? [],
     placement: init.placement ?? { xM: 0, zM: 0, rotationDeg: 0 },
   };
 }
@@ -371,30 +399,49 @@ export const useConfigurator = create<ConfiguratorState>((set, get) => {
       return building.id;
     },
 
-    dropCounted: (roomId, sku, delta) =>
+    placeItem: (sku, xM, zM) => {
+      const id = nextId("p");
       set(() =>
-        patchActive((b) => {
-          const room = { ...(b.roomCounts[roomId] ?? {}) };
-          const next = Math.max(0, (room[sku] ?? 0) + delta);
-          if (next === 0) delete room[sku];
-          else room[sku] = next;
-          const roomCounts = { ...b.roomCounts, [roomId]: room };
-          if (Object.keys(room).length === 0) delete roomCounts[roomId];
-          return { roomCounts };
-        }),
+        patchActive((b) => ({
+          placedItems: [...b.placedItems, { id, sku, xM: snap(xM), zM: snap(zM), rotationDeg: 0 }],
+        })),
+      );
+      return id;
+    },
+
+    moveItem: (id, xM, zM) =>
+      set(() =>
+        patchActive((b) => ({
+          placedItems: b.placedItems.map((p) =>
+            p.id === id ? { ...p, xM: snap(xM), zM: snap(zM) } : p,
+          ),
+        })),
       ),
 
-    setCountedQty: (roomId, sku, qty) =>
+    rotateItem: (id, deltaDeg) =>
       set(() =>
-        patchActive((b) => {
-          const room = { ...(b.roomCounts[roomId] ?? {}) };
-          if (qty <= 0) delete room[sku];
-          else room[sku] = qty;
-          const roomCounts = { ...b.roomCounts, [roomId]: room };
-          if (Object.keys(room).length === 0) delete roomCounts[roomId];
-          return { roomCounts };
-        }),
+        patchActive((b) => ({
+          placedItems: b.placedItems.map((p) =>
+            p.id === id ? { ...p, rotationDeg: (p.rotationDeg + deltaDeg + 360) % 360 } : p,
+          ),
+        })),
       ),
+
+    removeItem: (id) =>
+      set(() => patchActive((b) => ({ placedItems: b.placedItems.filter((p) => p.id !== id) }))),
+
+    addWall: (x1, z1, x2, z2) =>
+      set(() =>
+        patchActive((b) => ({
+          internalWalls: [
+            ...b.internalWalls,
+            { id: nextId("w"), x1: snap(x1), z1: snap(z1), x2: snap(x2), z2: snap(z2) },
+          ],
+        })),
+      ),
+
+    removeWall: (id) =>
+      set(() => patchActive((b) => ({ internalWalls: b.internalWalls.filter((w) => w.id !== id) }))),
 
     setSetup: (p) =>
       set((s) => {
@@ -731,12 +778,14 @@ function buildingFitout(b: BuildingState) {
     if (extra.qty > 0) fitout.push({ sku: extra.sku, qty: extra.qty });
   }
 
-  // Studio room-drop counted items (Blaise count-per-room).
-  for (const [roomId, counts] of Object.entries(b.roomCounts)) {
-    for (const [sku, qty] of Object.entries(counts)) {
-      if (qty > 0) fitout.push({ sku, qty, roomId });
-    }
-  }
+  // Studio placed fit-out — count per SKU (position is visual; Blaise counts).
+  const placedCounts = new Map<string, number>();
+  for (const p of b.placedItems) placedCounts.set(p.sku, (placedCounts.get(p.sku) ?? 0) + 1);
+  for (const [sku, qty] of placedCounts) fitout.push({ sku, qty });
+
+  // Drawn internal walls → Blaise "Internal Walls Lm" (priced per l.m.).
+  const wallLm = b.internalWalls.reduce((sum, w) => sum + wallLengthM(w), 0);
+  if (wallLm > 0) fitout.push({ sku: "INTERNAL-WALL-LM", qty: Math.round(wallLm * 100) / 100 });
 
   return { rooms, fitout };
 }

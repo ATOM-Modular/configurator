@@ -379,3 +379,28 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
   width: 20px; height: 20px; border: 1px solid var(--border); background: var(--surface-raised);
   color: var(--text); border-radius: 4px; line-height: 1;
 }
+
+/* ---------- Floorplanner-style 2D editor ---------- */
+.fp-editor { padding: 12px; display: flex; flex-direction: column; gap: 10px; height: 100%; overflow-y: auto; }
+.fp-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fp-toolbar button {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--surface-raised); border: 1px solid var(--border); color: var(--text);
+  border-radius: 6px; padding: 5px 10px; font-size: 12px;
+}
+.fp-toolbar button.active { border-color: var(--accent); color: var(--accent); }
+.fp-toolbar button.danger { color: var(--status-bad); border-color: var(--status-bad); }
+.fp-hint { font-size: 12px; color: var(--text-muted); }
+.fp-selctl { display: flex; gap: 4px; margin-left: auto; }
+.fp-svg { width: 100%; max-width: 420px; background: var(--grey-900); border-radius: 6px; }
+.fp-shell { fill: none; stroke: var(--accent); stroke-width: 0.07; }
+.fp-wall { stroke: var(--text); stroke-width: 0.09; stroke-linecap: round; cursor: pointer; }
+.fp-wall.sel { stroke: var(--accent); stroke-width: 0.13; }
+.fp-wall.preview { stroke: var(--status-warn); stroke-dasharray: 0.15 0.1; pointer-events: none; }
+.fp-dim { fill: var(--status-warn); font-size: 0.24px; text-anchor: middle; pointer-events: none; }
+.fp-item { cursor: grab; }
+.fp-item:active { cursor: grabbing; }
+.fp-item-dot { fill: var(--surface-raised); stroke: var(--accent); stroke-width: 0.04; }
+.fp-item-dot.sel { fill: var(--accent); }
+.fp-item-label { fill: var(--text-muted); font-size: 0.2px; text-anchor: middle; pointer-events: none; }
+.fp-footer { display: flex; gap: 18px; font-size: 12px; color: var(--text-muted); }
