@@ -19,12 +19,18 @@ export const PANEL_THICKNESS_M = 0.05;
 /**
  * Wall panel height at the eave. Panels are trapezoidal — the roof is a
  * shallow 2° gable, so heights run 2470 (eave) → 2570 (ridge).
- * [R6x3 panels: 2470 / 2510 / 2550 / 2570 stepping to the centre]
+ * Wall height to the underside of the eave (the low point at each short end)
+ * is 2754mm above FFL. [manufacture elevations: "2754 / 175"]
  */
-export const WALL_HEIGHT_EAVE_M = 2.47;
-export const WALL_HEIGHT_RIDGE_M = 2.57;
+export const WALL_HEIGHT_EAVE_M = 2.754;
+export const WALL_HEIGHT_RIDGE_M = 2.57; // legacy; ridge now derived from length
 
-/** Roof pitch each side of the central ridge. [R6x3 + CD12x9 roof plans: "2° 2°"] */
+/**
+ * Roof pitch. The ridge runs ACROSS the width at MID-LENGTH; the roof falls
+ * 2° each side toward the two SHORT ends (never a fall across the width, never
+ * a mono-skillion). Ridge height = eave + tan(2°) × (length / 2).
+ * [Central Darling 12x3 / 12x9, Air Liquide 22x5 roof plans + elevations]
+ */
 export const ROOF_PITCH_DEG = 2;
 
 // --- Chassis / floor --------------------------------------------------------

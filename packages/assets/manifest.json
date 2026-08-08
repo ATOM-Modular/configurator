@@ -11,7 +11,7 @@
       "category": "structure",
       "dimensions": {
         "x": 1.2,
-        "y": 2.47,
+        "y": 2.754,
         "z": 0.05
       },
       "tilingAxis": "x",
@@ -46,7 +46,7 @@
       "category": "structure",
       "dimensions": {
         "x": 1.2,
-        "y": 2.47,
+        "y": 2.754,
         "z": 0.05
       },
       "tilingAxis": "none",
@@ -77,7 +77,7 @@
       "category": "structure",
       "dimensions": {
         "x": 0.08,
-        "y": 2.47,
+        "y": 2.754,
         "z": 0.08
       },
       "tilingAxis": "none",
@@ -130,7 +130,7 @@
       "category": "structure",
       "dimensions": {
         "x": 0.15,
-        "y": 2.47,
+        "y": 2.754,
         "z": 0.15
       },
       "tilingAxis": "none",
@@ -301,7 +301,7 @@
       "category": "opening",
       "dimensions": {
         "x": 1.2,
-        "y": 2.47,
+        "y": 2.754,
         "z": 0.05
       },
       "tilingAxis": "none",
@@ -328,7 +328,7 @@
       "category": "opening",
       "dimensions": {
         "x": 1.2,
-        "y": 2.47,
+        "y": 2.754,
         "z": 0.05
       },
       "tilingAxis": "none",
@@ -355,7 +355,7 @@
       "category": "opening",
       "dimensions": {
         "x": 2.4,
-        "y": 2.47,
+        "y": 2.754,
         "z": 0.05
       },
       "tilingAxis": "none",
@@ -382,7 +382,7 @@
       "category": "opening",
       "dimensions": {
         "x": 1.2,
-        "y": 2.47,
+        "y": 2.754,
         "z": 0.05
       },
       "tilingAxis": "none",
@@ -409,7 +409,7 @@
       "category": "opening",
       "dimensions": {
         "x": 1.2,
-        "y": 2.47,
+        "y": 2.754,
         "z": 0.05
       },
       "tilingAxis": "none",
@@ -436,7 +436,7 @@
       "category": "opening",
       "dimensions": {
         "x": 1.2,
-        "y": 2.47,
+        "y": 2.754,
         "z": 0.05
       },
       "tilingAxis": "none",

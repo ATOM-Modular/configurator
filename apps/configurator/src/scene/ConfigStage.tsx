@@ -19,6 +19,7 @@ import {
   createPlaceholderPart,
   getPart,
   loadManifest,
+  MODULE_WIDTH_M,
   ROOF_PITCH_DEG,
   WALL_HEIGHT_EAVE_M,
   type PlacedPart,
@@ -100,7 +101,7 @@ function instantiate(
     else if (p.partId === "footing-surefoot") mat = footingMaterial();
     else if (isWall) mat = wallMaterial(wallColour);
     else if (isSteel) mat = steelMaterial(roofColour, corrugated);
-    else if (isOpening) mat = frameMaterial("Surfmist");
+    else if (isOpening) mat = frameMaterial();
     else mat = wallMaterial(wallColour);
 
     if (dim && "color" in mat) mat.color.multiplyScalar(0.82);
@@ -133,49 +134,81 @@ function buildingPlacements(b: BuildingState): PlacedPart[] {
 }
 
 /**
- * Clean duo-pitch roof drawn as a solid, replacing the stepped placeholder
- * sheets. Ridge runs ALONG the length at mid-width, falling 2° to both long
- * eaves — matching the ATOM roof plans — with a small consistent overhang,
- * ridge cap, fascia and barge trim in the roof colour.
+ * ATOM standard roof, drawn as a solid (source of truth: manufacture drawings
+ * + Blaise gutter/downpipe sheet):
+ *  - shallow dual-fall roof, ridge ACROSS the width at MID-LENGTH, 2° each
+ *    side draining to the two SHORT ends; ridge = eave + tan(2°)·(L/2)
+ *  - one continuous roof over the whole footprint; multi-module joins get a
+ *    raised lengthwise cover flashing (no valley, no change in fall)
+ *  - corrugation ribs run ALONG the length (parallel to fall)
+ *  - gutters across the two short ends only; long sides carry a raking fascia
+ *  - downpipes 100×50 at the end-wall corners
+ * Everything is Monument (b.roofColour).
  */
 function RoofSolid({ b }: { b: BuildingState }) {
   const L = b.lengthM;
   const W = b.widthM;
-  const wallH = WALL_HEIGHT_EAVE_M;
-  const rise = (W / 2) * Math.tan(MathUtils.degToRad(ROOF_PITCH_DEG));
-  const ridgeY = wallH + rise;
-  const ohX = 0.15; // end (barge) overhang
-  const ohZ = 0.2; // eave overhang
-
+  const eaveH = WALL_HEIGHT_EAVE_M;
+  const pitch = MathUtils.degToRad(ROOF_PITCH_DEG);
+  const rise = Math.tan(pitch) * (L / 2);
+  const ridgeH = eaveH + rise;
+  const oh = 0.07; // oversail on all four sides
+  const fasciaDrop = 0.32; // raking fascia face
   const fflM = b.ffl_mm / 1000;
+  const multi = W > 3.4;
+  const rakeAngle = Math.atan2(rise, L / 2);
+  const slopeLen = Math.hypot(L / 2, rise);
 
   const geom = useMemo(() => {
-    const P = [
-      [-ohX, wallH, -ohZ], // A south eave, x-min
-      [L + ohX, wallH, -ohZ], // B south eave, x-max
-      [-ohX, ridgeY, W / 2], // C ridge x-min
-      [L + ohX, ridgeY, W / 2], // D ridge x-max
-      [-ohX, wallH, W + ohZ], // E north eave x-min
-      [L + ohX, wallH, W + ohZ], // F north eave x-max
-    ];
-    const pos = new Float32Array(P.flat());
-    // u across the width, v along the length → corrugation ribs run LONG ways
-    // (parallel to the ridge), the way long-run Colorbond is laid on a
-    // near-flat 2° cross-fall roof.
-    const uv = new Float32Array([0, 0, 0, 1, 0.5, 0, 0.5, 1, 1, 0, 1, 1]);
-    const idx = [0, 1, 3, 0, 3, 2, 2, 3, 5, 2, 5, 4];
+    const pos: number[] = [];
+    const uv: number[] = [];
+    const idx: number[] = [];
+    const v = (x: number, y: number, z: number, u: number, w: number) => {
+      pos.push(x, y, z);
+      uv.push(u, w);
+      return pos.length / 3 - 1;
+    };
+    const quad = (a: number, c: number, d: number, e: number) => idx.push(a, c, d, a, d, e);
+
+    // roof surface — ribs along length ⇒ u = z/W (across width), v = x/L
+    const zS = -oh;
+    const zN = W + oh;
+    const AwS = v(-oh, eaveH, zS, zS / W, 0);
+    const AwN = v(-oh, eaveH, zN, zN / W, 0);
+    const RdS = v(L / 2, ridgeH, zS, zS / W, 0.5);
+    const RdN = v(L / 2, ridgeH, zN, zN / W, 0.5);
+    const EwS = v(L + oh, eaveH, zS, zS / W, 1);
+    const EwN = v(L + oh, eaveH, zN, zN / W, 1);
+    quad(AwS, AwN, RdN, RdS); // west slope
+    quad(RdS, RdN, EwN, EwS); // east slope
+
+    // raking fascia hanging below the two long edges (follows the rake, peaks
+    // at mid-length — the dominant profile on the long elevations)
+    const fascia = (zEdge: number) => {
+      const t0 = v(-oh, eaveH, zEdge, 0, 0);
+      const t1 = v(L / 2, ridgeH, zEdge, 0, 0);
+      const t2 = v(L + oh, eaveH, zEdge, 0, 0);
+      const b0 = v(-oh, eaveH - fasciaDrop, zEdge, 0, 0);
+      const b1 = v(L / 2, ridgeH - fasciaDrop, zEdge, 0, 0);
+      const b2 = v(L + oh, eaveH - fasciaDrop, zEdge, 0, 0);
+      quad(t0, t1, b1, b0);
+      quad(t1, t2, b2, b1);
+    };
+    fascia(zS);
+    fascia(zN);
+
     const g = new BufferGeometry();
-    g.setAttribute("position", new BufferAttribute(pos, 3));
-    g.setAttribute("uv", new BufferAttribute(uv, 2));
+    g.setAttribute("position", new BufferAttribute(new Float32Array(pos), 3));
+    g.setAttribute("uv", new BufferAttribute(new Float32Array(uv), 2));
     g.setIndex(idx);
     g.computeVertexNormals();
     return g;
-  }, [L, W, wallH, ridgeY]);
+  }, [L, W, eaveH, ridgeH]);
 
   const mat = useMemo(() => {
     const normal = roofNormalMap().clone();
     normal.needsUpdate = true;
-    // ribs repeat across the width → each rib runs the length of the roof
+    // ribs repeat across the width → each rib runs the length (down the fall)
     normal.repeat.set(Math.max(6, Math.round(W * 4)), 1);
     const m = steelMaterial(b.roofColour, false);
     m.normalMap = normal;
@@ -185,42 +218,79 @@ function RoofSolid({ b }: { b: BuildingState }) {
   }, [b.roofColour, W]);
 
   const trim = useMemo(() => steelMaterial(b.roofColour, false), [b.roofColour]);
-  const ridgeLen = L + 2 * ohX;
+
+  const joins: number[] = [];
+  if (multi) for (let z = MODULE_WIDTH_M; z < W - 0.01; z += MODULE_WIDTH_M) joins.push(z);
+
+  const downZ = multi ? [0.2, W - 0.2] : [0.2];
+  const dpTop = eaveH;
+  const dpBottom = -fflM - 0.05; // just below the chassis line
+  const dpH = dpTop - dpBottom;
 
   return (
     <group>
       <mesh geometry={geom} material={mat} castShadow receiveShadow />
 
-      {/* ridge cap along the length */}
-      <mesh position={[L / 2, ridgeY + 0.02, W / 2]} material={trim} castShadow>
-        <boxGeometry args={[ridgeLen, 0.04, 0.14]} />
+      {/* ridge cap ACROSS the width at mid-length */}
+      <mesh position={[L / 2, ridgeH + 0.02, W / 2]} material={trim} castShadow>
+        <boxGeometry args={[0.14, 0.05, W + 2 * oh]} />
       </mesh>
 
-      {/* barge/rake capping across the two 3m ends (over the ridge) */}
-      <mesh position={[-ohX, wallH + rise / 2, W / 2]} material={trim} castShadow>
-        <boxGeometry args={[0.05, 0.14, W + 2 * ohZ]} />
-      </mesh>
-      <mesh position={[L + ohX, wallH + rise / 2, W / 2]} material={trim} castShadow>
-        <boxGeometry args={[0.05, 0.14, W + 2 * ohZ]} />
-      </mesh>
-
-      {b.gutters && (
-        <>
-          {/* box gutter along each long low eave */}
-          <mesh position={[L / 2, wallH - 0.05, -ohZ - 0.02]} material={trim} castShadow>
-            <boxGeometry args={[ridgeLen, 0.11, 0.11]} />
-          </mesh>
-          <mesh position={[L / 2, wallH - 0.05, W + ohZ + 0.02]} material={trim} castShadow>
-            <boxGeometry args={[ridgeLen, 0.11, 0.11]} />
-          </mesh>
-          {/* one downpipe at a rear corner, gutter → ground */}
+      {/* module-join cover flashing — raised, full length, following the fall
+          (two segments meeting at the ridge). NO valley. */}
+      {joins.map((z, i) => (
+        <group key={`join-${i}`}>
           <mesh
-            position={[L - 0.12, (wallH - fflM) / 2 - 0.05, W + ohZ + 0.04]}
+            position={[L / 4, eaveH + rise / 2 + 0.03, z]}
+            rotation={[0, 0, rakeAngle]}
             material={trim}
             castShadow
           >
-            <boxGeometry args={[0.08, wallH + fflM, 0.06]} />
+            <boxGeometry args={[slopeLen, 0.05, 0.3]} />
           </mesh>
+          <mesh
+            position={[(3 * L) / 4, eaveH + rise / 2 + 0.03, z]}
+            rotation={[0, 0, -rakeAngle]}
+            material={trim}
+            castShadow
+          >
+            <boxGeometry args={[slopeLen, 0.05, 0.3]} />
+          </mesh>
+        </group>
+      ))}
+
+      {b.gutters && (
+        <>
+          {/* quad gutter across each SHORT end, full width */}
+          {[-oh, L + oh].map((x, i) => (
+            <mesh
+              key={`gut-${i}`}
+              position={[x, eaveH - 0.06, W / 2]}
+              material={trim}
+              castShadow
+            >
+              <boxGeometry args={[0.12, 0.12, W + 2 * oh]} />
+            </mesh>
+          ))}
+          {/* end capping above each gutter */}
+          {[-oh, L + oh].map((x, i) => (
+            <mesh key={`cap-${i}`} position={[x, eaveH + 0.05, W / 2]} material={trim} castShadow>
+              <boxGeometry args={[0.1, 0.05, W + 2 * oh]} />
+            </mesh>
+          ))}
+          {/* 100×50 downpipes at the end-wall corners */}
+          {[0.02, L - 0.02].flatMap((x, xi) =>
+            downZ.map((z, zi) => (
+              <mesh
+                key={`dp-${xi}-${zi}`}
+                position={[x, dpBottom + dpH / 2, z]}
+                material={trim}
+                castShadow
+              >
+                <boxGeometry args={[0.1, dpH, 0.05]} />
+              </mesh>
+            )),
+          )}
         </>
       )}
     </group>

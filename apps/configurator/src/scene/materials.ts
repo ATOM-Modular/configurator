@@ -93,11 +93,15 @@ export function steelMaterial(colour: string, corrugated = false): MeshStandardM
   return opaque(mat);
 }
 
-/** Powder-coat door leaf / window frame. */
-export function frameMaterial(colour = "Surfmist"): MeshStandardMaterial {
+/**
+ * Door/window frame — dark anodised charcoal so openings read clearly
+ * against cream walls (a Surfmist frame on a Surfmist wall is invisible,
+ * which is exactly why placed windows disappeared).
+ */
+export function frameMaterial(): MeshStandardMaterial {
   return opaque(
     new MeshStandardMaterial({
-      color: colorbondHex(colour),
+      color: "#33363a",
       metalness: FRAME_PBR.metalness,
       roughness: FRAME_PBR.roughness,
       envMapIntensity: FRAME_PBR.envMapIntensity,
@@ -106,19 +110,20 @@ export function frameMaterial(colour = "Surfmist"): MeshStandardMaterial {
 }
 
 /**
- * Real glazing — the ONLY transmissive material in the scene (SPEC).
- * MeshPhysicalMaterial transmission keeps it see-through without the sorting
- * pitfalls of plain alpha blending.
+ * Glazing — the ONLY transmissive material in the scene (SPEC). Tinted and
+ * reflective so it reads as a real dark window against a cream wall rather
+ * than a clear hole showing the interior.
  */
 export function glassMaterial(): MeshPhysicalMaterial {
   const m = new MeshPhysicalMaterial({
-    color: "#aebfc9",
-    metalness: 0,
-    roughness: 0.06,
-    transmission: 0.9,
+    color: "#4a5a63",
+    metalness: 0.1,
+    roughness: 0.05,
+    transmission: 0.35,
     thickness: 0.04,
     ior: 1.5,
-    envMapIntensity: 1.2,
+    reflectivity: 0.6,
+    envMapIntensity: 1.6,
   });
   m.transparent = true; // required for transmission compositing
   return m;
