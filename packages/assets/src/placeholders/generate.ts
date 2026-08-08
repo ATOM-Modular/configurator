@@ -59,21 +59,26 @@ export function createPlaceholderPart(part: ManifestPart): Group {
 
   switch (true) {
     case part.id.startsWith("door-"): {
-      // frame + inset leaf
+      // frame + inset leaf. The leaf is tagged so the renderer can give it a
+      // powder-coat finish distinct from the reveal frame.
       const frame = 0.07;
       group.add(box(x, y, z, [0, 0, 0], mat));
-      group.add(
-        box(x - 2 * frame, y - frame - 0.02, z / 2, [frame, 0.02, z / 4], material(part, 0x6e7f94)),
-      );
+      const leaf = box(x - 2 * frame, y - frame - 0.02, z / 2, [frame, 0.02, z / 4], material(part, 0x6e7f94));
+      leaf.userData.leaf = true;
+      group.add(leaf);
       break;
     }
     case part.id.startsWith("window-"): {
+      // frame + glazing. The glazing mesh is tagged so ONLY it renders as
+      // glass — the frame stays opaque (fixes see-through window units).
       const frame = 0.06;
       group.add(box(x, y, z, [0, 0, 0], mat));
       const glass = material(part, 0xa8c6d8);
       glass.transparent = true;
       glass.opacity = 0.55;
-      group.add(box(x - 2 * frame, y - 2 * frame, z / 2, [frame, frame, z / 4], glass));
+      const glazing = box(x - 2 * frame, y - 2 * frame, z / 2, [frame, frame, z / 4], glass);
+      glazing.userData.glass = true;
+      group.add(glazing);
       break;
     }
     case part.id === "tank-5000": {

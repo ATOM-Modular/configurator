@@ -1,10 +1,12 @@
-import { useMemo } from "react";
-import { Canvas, type ThreeEvent } from "@react-three/fiber";
-import { ContactShadows, Environment, Lightformer, OrbitControls } from "@react-three/drei";
+import { useEffect, useMemo } from "react";
+import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
+import { ContactShadows, OrbitControls } from "@react-three/drei";
 import {
   ACESFilmicToneMapping,
   MathUtils,
   MeshStandardMaterial,
+  SRGBColorSpace,
+  Vector2,
   type Group,
   type Mesh,
 } from "three";
@@ -19,12 +21,30 @@ import {
 import { footprint, walkwayGeometry } from "../site/geometry";
 import { activeBuilding, useConfigurator, type BuildingState } from "../state/store";
 import {
+  frameMaterial,
   glassMaterial,
   ROOF_PARTS,
   steelMaterial,
   WALL_PARTS,
   wallMaterial,
 } from "./materials";
+import { groundColorMap, proceduralSky } from "./textures";
+
+/** ¾-aerial hero pose (SPEC benchmark camera): 45° azimuth, 35° elevation. */
+export function benchmarkPose(view: { cx: number; cz: number; span: number }) {
+  const d = view.span * 1.7;
+  const el = MathUtils.degToRad(35);
+  const az = MathUtils.degToRad(45);
+  const horiz = Math.cos(el) * d;
+  return {
+    position: [
+      view.cx + horiz * Math.cos(az),
+      Math.sin(el) * d + 1,
+      view.cz + horiz * Math.sin(az),
+    ] as [number, number, number],
+    target: [view.cx, 1.2, view.cz] as [number, number, number],
+  };
+}
 
 const manifest = loadManifest();
 const prototypes = new Map<string, Group>();
@@ -48,21 +68,24 @@ function instantiate(
 
   const isWall = WALL_PARTS.has(p.partId);
   const isSteel = ROOF_PARTS.has(p.partId);
-  const isGlazed = p.partId.startsWith("window-");
+  const isOpening = p.partId.startsWith("window-") || p.partId.startsWith("door-");
+  const corrugated = p.partId === "roof-sheet-skillion";
 
   obj.traverse((child) => {
     const mesh = child as Mesh;
     if (!mesh.isMesh) return;
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-    const mat = isWall
-      ? wallMaterial(wallColour)
-      : isSteel
-        ? steelMaterial(roofColour)
-        : isGlazed
-          ? glassMaterial()
-          : wallMaterial(wallColour);
-    if (dim) mat.color.multiplyScalar(0.82);
+
+    // Per-mesh so a window's glazing is glass but its frame stays opaque.
+    let mat: MeshStandardMaterial | ReturnType<typeof glassMaterial>;
+    if (mesh.userData.glass) mat = glassMaterial();
+    else if (isWall) mat = wallMaterial(wallColour);
+    else if (isSteel) mat = steelMaterial(roofColour, corrugated);
+    else if (isOpening) mat = frameMaterial("Surfmist");
+    else mat = wallMaterial(wallColour);
+
+    if (dim && "color" in mat) mat.color.multiplyScalar(0.82);
     mesh.material = mat;
   });
   return obj;
@@ -223,25 +246,100 @@ function SiteKitModels() {
 }
 
 /**
- * Overcast-daylight environment built from in-scene lightformers.
- *
- * SPEC calls for an HDRI; this is the same idea generated procedurally so
- * the public bundle stays self-contained (no CDN fetch, no CSP exemption).
- * It's what gives the Colorbond steel its sheen — flat lights alone read
- * as plastic.
+ * Overcast-daylight IBL from a procedural equirectangular sky, used for both
+ * reflections and the visible background. SPEC calls for a Poly Haven HDRI;
+ * this keeps the bundle self-contained (no CDN fetch) and a real .hdr is a
+ * drop-in via drei <Environment files>. The env map is what gives Colorbond
+ * steel its sheen — flat lights on flat materials read as plastic.
  */
-function SoftSky() {
+function SceneEnv() {
+  const scene = useThree((s) => s.scene);
+  useEffect(() => {
+    const sky = proceduralSky();
+    scene.environment = sky;
+    scene.background = sky;
+    return () => {
+      scene.environment = null;
+    };
+  }, [scene]);
+  return null;
+}
+
+/**
+ * Benchmark discipline (SPEC): snap the hero pose (window "atom-benchmark"
+ * event or the "b" key) and export a 1920×1080 PNG ("atom-capture" event).
+ * Internal-mode buttons in the stage dispatch these.
+ */
+function CaptureRig({ view }: { view: { cx: number; cz: number; span: number } }) {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
+  const controls = useThree((s) => s.controls) as
+    | { target: { set: (x: number, y: number, z: number) => void }; update: () => void }
+    | null;
+
+  useEffect(() => {
+    const snap = () => {
+      const pose = benchmarkPose(view);
+      camera.position.set(...pose.position);
+      if (controls?.target) {
+        controls.target.set(...pose.target);
+        controls.update();
+      }
+      camera.lookAt(...pose.target);
+    };
+
+    const capture = () => {
+      const prev = new Vector2();
+      gl.getSize(prev);
+      const W = 1920;
+      const H = 1080;
+      const cam = camera as { aspect: number; updateProjectionMatrix: () => void };
+      const prevAspect = cam.aspect;
+      cam.aspect = W / H;
+      cam.updateProjectionMatrix();
+      gl.setSize(W, H, false);
+      gl.render(scene, camera);
+      const url = gl.domElement.toDataURL("image/png");
+      cam.aspect = prevAspect;
+      cam.updateProjectionMatrix();
+      gl.setSize(prev.x, prev.y, false);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "atom-benchmark-1920x1080.png";
+      a.click();
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "b" && !/input|textarea|select/i.test((e.target as Element)?.tagName ?? "")) {
+        snap();
+      }
+    };
+    window.addEventListener("atom-benchmark", snap);
+    window.addEventListener("atom-capture", capture);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("atom-benchmark", snap);
+      window.removeEventListener("atom-capture", capture);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [gl, scene, camera, controls, view]);
+
+  return null;
+}
+
+/** Large textured ground plane with mottled gravel so tiling doesn't read. */
+function GroundPlane({ cx, cz }: { cx: number; cz: number }) {
+  const map = useMemo(() => {
+    const t = groundColorMap();
+    t.repeat.set(24, 24);
+    return t;
+  }, []);
   return (
-    <Environment resolution={256} frames={1}>
-      {/* bright overcast dome */}
-      <Lightformer intensity={0.85} rotation-x={Math.PI / 2} position={[0, 6, -9]} scale={[24, 24, 1]} color="#eef2f6" />
-      {/* sun card */}
-      <Lightformer intensity={2.6} rotation-y={Math.PI / 4} position={[9, 7, 6]} scale={[8, 8, 1]} color="#fff6e8" />
-      {/* cool bounce from the opposite side */}
-      <Lightformer intensity={0.5} rotation-y={-Math.PI / 3} position={[-9, 4, -6]} scale={[10, 10, 1]} color="#cfd9e4" />
-      {/* warm ground bounce — stops undersides going dead black */}
-      <Lightformer intensity={0.4} rotation-x={-Math.PI / 2} position={[0, -3, 0]} scale={[20, 20, 1]} color="#b9ab92" />
-    </Environment>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[cx, 0, cz]} receiveShadow>
+      <planeGeometry args={[220, 220]} />
+      <meshStandardMaterial map={map} roughness={0.97} metalness={0} />
+    </mesh>
   );
 }
 
@@ -270,19 +368,25 @@ export function ConfigStage() {
     return { cx, cz, span };
   }, [shown]);
 
-  const dist = view.span * 1.5;
+  const pose = benchmarkPose(view);
 
   return (
     <Canvas
       shadows
-      camera={{ position: [view.cx + dist, dist * 0.52, view.cz - dist * 0.85], fov: 38 }}
-      gl={{ antialias: true, toneMapping: ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
+      camera={{ position: pose.position, fov: 32 }}
+      gl={{
+        antialias: true,
+        toneMapping: ACESFilmicToneMapping,
+        toneMappingExposure: 1.1,
+        outputColorSpace: SRGBColorSpace,
+        preserveDrawingBuffer: true, // required for PNG capture
+      }}
     >
-      {/* soft overcast gradient, matching the sales-render backdrop */}
-      <color attach="background" args={[0xdfe4e8]} />
-      <fog attach="fog" args={[0xdfe4e8, view.span * 4, view.span * 12]} />
+      {/* horizon haze so distant ground melts into the sky */}
+      <fog attach="fog" args={[0xe4e8ec, view.span * 5, view.span * 14]} />
 
-      <SoftSky />
+      <SceneEnv />
+      <CaptureRig view={view} />
       <directionalLight
         position={[view.cx + 18, 26, view.cz - 14]}
         intensity={1.7}
@@ -316,10 +420,7 @@ export function ConfigStage() {
         resolution={1024}
       />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[view.cx, 0, view.cz]} receiveShadow>
-        <planeGeometry args={[160, 160]} />
-        <meshStandardMaterial color={0x9c9280} roughness={0.98} metalness={0} />
-      </mesh>
+      <GroundPlane cx={view.cx} cz={view.cz} />
 
       <OrbitControls
         target={[view.cx, 1.2, view.cz]}

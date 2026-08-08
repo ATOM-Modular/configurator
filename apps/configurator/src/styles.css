@@ -303,3 +303,14 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
 .plan-walkway.elevated { fill: rgba(224, 160, 32, 0.2); stroke: var(--status-warn); }
 .footprint rect { fill: var(--grey-800); stroke: var(--atom-red); }
 .plan-shell { fill: var(--grey-800); stroke: var(--atom-red); }
+
+/* ---------- stage controls (benchmark camera / capture) ---------- */
+.stage-controls {
+  position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; z-index: 5;
+}
+.stage-controls button {
+  background: rgba(18, 18, 17, 0.82); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 6px 12px; font-size: 12px;
+}
+.stage-controls button:hover { border-color: var(--accent); color: #fff; }

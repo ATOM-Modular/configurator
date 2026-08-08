@@ -1,17 +1,23 @@
 /**
- * Material treatment for the 3D stage.
+ * Material treatment for the 3D stage — calibrated toward ATOM's Enscape
+ * sales renders (cream Surfmist walls, near-black Monument steel, soft
+ * overcast light).
  *
- * Calibrated against ATOM's own sales renders (Central Darling PSL R0):
- * cream Surfmist EPS wall panels read as a low-sheen painted surface, while
- * the Monument roof, cappings, gutter and downpipes read as coated steel
- * with a visible sheen. That cream/near-black contrast is the single
- * strongest visual signature of an ATOM building.
- *
- * [CHECK with Duane] metalness/roughness are SPEC starting values — worth
- * calibrating against physical Colorbond swatches.
+ * INVARIANT: every material except glazing is fully opaque. Translucent
+ * walls were a real bug (glass material bleeding onto window frames); the
+ * factories below hard-set transparent:false / depthWrite:true / FrontSide
+ * so it cannot recur.
  */
-import { Color, MeshStandardMaterial } from "three";
-import { COLORBOND_COLOURS } from "../state/presets";
+import {
+  FrontSide,
+  MeshPhysicalMaterial,
+  MeshStandardMaterial,
+  RepeatWrapping,
+  Vector2,
+  type Material,
+} from "three";
+import { colorbondHex, FRAME_PBR, STEEL_PBR, WALL_PBR } from "./colorbond";
+import { roofNormalMap, wallNormalMap } from "./textures";
 
 /** Parts whose colour follows the WALL selection. */
 export const WALL_PARTS = new Set(["panel-wall-1200", "panel-wall-cut"]);
@@ -29,34 +35,81 @@ export const ROOF_PARTS = new Set([
   "chassis-edge",
 ]);
 
+/** Kept for callers that still want the raw hex (plan swatches etc.). */
 export function colourHex(name: string): string {
-  return COLORBOND_COLOURS.find((c) => c.name === name)?.hex ?? "#E4E2D5";
+  return colorbondHex(name);
 }
 
-/** Painted EPS panel — matte, barely any specular. */
+/** Force the opacity invariant on any opaque material. */
+function opaque<T extends Material>(m: T): T {
+  m.transparent = false;
+  m.opacity = 1;
+  m.depthWrite = true;
+  m.side = FrontSide;
+  return m;
+}
+
+/** Painted EPS panel — matte, with the 1200mm joint groove. */
 export function wallMaterial(colour: string): MeshStandardMaterial {
-  return new MeshStandardMaterial({
-    color: new Color(colourHex(colour)),
-    metalness: 0.04,
-    roughness: 0.72,
-  });
+  const normal = wallNormalMap();
+  normal.repeat.set(1, 1);
+  return opaque(
+    new MeshStandardMaterial({
+      color: colorbondHex(colour),
+      metalness: WALL_PBR.metalness,
+      roughness: WALL_PBR.roughness,
+      envMapIntensity: WALL_PBR.envMapIntensity,
+      normalMap: normal,
+      normalScale: new Vector2(0.4, 0.4),
+    }),
+  );
 }
 
-/** Colorbond steel — SPEC: metalness 0.55–0.7, roughness 0.3–0.4. */
-export function steelMaterial(colour: string): MeshStandardMaterial {
-  return new MeshStandardMaterial({
-    color: new Color(colourHex(colour)),
-    metalness: 0.62,
-    roughness: 0.36,
+/** Colorbond coated steel — sheen + corrugation. */
+export function steelMaterial(colour: string, corrugated = false): MeshStandardMaterial {
+  const mat = new MeshStandardMaterial({
+    color: colorbondHex(colour),
+    metalness: STEEL_PBR.metalness,
+    roughness: STEEL_PBR.roughness,
+    envMapIntensity: STEEL_PBR.envMapIntensity,
   });
+  if (corrugated) {
+    const normal = roofNormalMap();
+    normal.wrapS = normal.wrapT = RepeatWrapping;
+    normal.repeat.set(6, 1);
+    mat.normalMap = normal;
+    mat.normalScale = new Vector2(0.7, 0.7);
+  }
+  return opaque(mat);
 }
 
-export function glassMaterial(): MeshStandardMaterial {
-  return new MeshStandardMaterial({
-    color: new Color("#93a7b4"),
-    metalness: 0.25,
-    roughness: 0.08,
-    transparent: true,
-    opacity: 0.62,
+/** Powder-coat door leaf / window frame. */
+export function frameMaterial(colour = "Surfmist"): MeshStandardMaterial {
+  return opaque(
+    new MeshStandardMaterial({
+      color: colorbondHex(colour),
+      metalness: FRAME_PBR.metalness,
+      roughness: FRAME_PBR.roughness,
+      envMapIntensity: FRAME_PBR.envMapIntensity,
+    }),
+  );
+}
+
+/**
+ * Real glazing — the ONLY transmissive material in the scene (SPEC).
+ * MeshPhysicalMaterial transmission keeps it see-through without the sorting
+ * pitfalls of plain alpha blending.
+ */
+export function glassMaterial(): MeshPhysicalMaterial {
+  const m = new MeshPhysicalMaterial({
+    color: "#aebfc9",
+    metalness: 0,
+    roughness: 0.06,
+    transmission: 0.9,
+    thickness: 0.04,
+    ior: 1.5,
+    envMapIntensity: 1.2,
   });
+  m.transparent = true; // required for transmission compositing
+  return m;
 }

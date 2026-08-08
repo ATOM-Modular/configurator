@@ -3,6 +3,7 @@ import { buildSiteConfig, useConfigurator } from "../state/store";
 import { ConfigStage } from "../scene/ConfigStage";
 import { PricePanel } from "../components/PricePanel";
 import { SiteCanvas } from "../site/SiteCanvas";
+import { IS_INTERNAL_BUILD } from "../internal/flag";
 import { StructureTab } from "../tabs/StructureTab";
 import { OpeningsTab } from "../tabs/OpeningsTab";
 import { InteriorTab } from "../tabs/InteriorTab";
@@ -62,6 +63,7 @@ export function Step3Design() {
 
       <div className="stage-wrap">
         <ConfigStage />
+        <StageControls />
         {s.mode === "site" && (
           <div className="site-plan-overlay">
             <SiteCanvas />
@@ -71,5 +73,31 @@ export function Step3Design() {
 
       <PricePanel site={site} />
     </section>
+  );
+}
+
+/**
+ * Benchmark camera + capture controls. Always offers the hero-angle snap
+ * (also the "b" key); the 1920×1080 PNG export is internal-mode only, since
+ * it's a sales/QA tool rather than a customer action.
+ */
+function StageControls() {
+  return (
+    <div className="stage-controls">
+      <button
+        title="Snap to the benchmark hero angle (b)"
+        onClick={() => window.dispatchEvent(new Event("atom-benchmark"))}
+      >
+        Hero angle
+      </button>
+      {IS_INTERNAL_BUILD && (
+        <button
+          title="Export a 1920×1080 PNG from the benchmark camera"
+          onClick={() => window.dispatchEvent(new Event("atom-capture"))}
+        >
+          Capture ↓
+        </button>
+      )}
+    </div>
   );
 }
