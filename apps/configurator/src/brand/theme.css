@@ -1,0 +1,44 @@
+/**
+ * ATOM Modular brand theme — from the ATOM Brand Guide.
+ *
+ * Primary palette: ATOM Red (Pantone 200 C), Black, White, with a neutral
+ * grey scale for UI surfaces. Red is the single accent — used for the
+ * wordmark, active state, primary actions and the live price. It is never
+ * used for large fills.
+ *
+ * NOTE [CHECK with Duane]: --atom-red is taken from the guide's Pantone 200 C
+ * reference. Confirm the exact RGB/hex against the source artwork before this
+ * goes in front of customers.
+ */
+:root {
+  /* brand */
+  --atom-red: #ba0c2f;
+  --atom-red-bright: #d8143c;
+  --atom-black: #101010;
+  --atom-white: #ffffff;
+
+  /* neutral scale */
+  --grey-900: #171717;
+  --grey-800: #1f1f1f;
+  --grey-700: #2b2b2b;
+  --grey-600: #3d3d3d;
+  --grey-500: #5c5c5c;
+  --grey-400: #8a8a8a;
+  --grey-300: #b5b5b5;
+  --grey-200: #dcdcdc;
+
+  /* semantic (ops legibility — outside the brand palette by necessity) */
+  --status-warn: #e0a020;
+  --status-good: #3fa877;
+  --status-bad: var(--atom-red-bright);
+
+  /* surfaces */
+  --bg: var(--atom-black);
+  --surface: var(--grey-900);
+  --surface-raised: var(--grey-800);
+  --border: var(--grey-700);
+  --text: var(--grey-200);
+  --text-muted: var(--grey-400);
+  --accent: var(--atom-red);
+  --accent-on: var(--atom-white);
+}

@@ -5,6 +5,7 @@
  * math, and placeholder generators only. NEVER rates.
  */
 export * from "./manifest.js";
+export * from "./spec-constants.js";
 export { loadManifest } from "./manifest-data.js";
 
 export * from "./assembly/types.js";

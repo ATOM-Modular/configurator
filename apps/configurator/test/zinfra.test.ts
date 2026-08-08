@@ -89,9 +89,11 @@ describe("Zinfra footing schedule", () => {
     const s = loadZinfra();
     const rows = footingSchedule(s.buildings);
     const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
-    expect(byName["Site Office"]!.footingHeightMm).toBe(515);
-    expect(byName["M/F Toilet"]!.footingHeightMm).toBe(830);
-    expect(byName["Lunchroom 01"]!.footingHeightMm).toBe(285);
+    // Drawing states 521 for the elevated office and 292 for the lunchrooms;
+    // FFL − 243mm build-up reproduces these to within 1mm of drawing rounding.
+    expect(byName["Site Office"]!.footingHeightMm).toBe(522);
+    expect(byName["M/F Toilet"]!.footingHeightMm).toBe(837);
+    expect(byName["Lunchroom 01"]!.footingHeightMm).toBe(292);
     // four single-module buildings → 24 Surefoot blocks
     expect(totalFootings(rows)).toBe(24);
   });

@@ -8,6 +8,16 @@
  *     to FFL − chassis allowance
  */
 import type { Manifest } from "../manifest.js";
+import {
+  BEARER_INSET_M,
+  BUILDING_FLOOR_BUILDUP_M,
+  FOOTING_END_SETBACK_TOTAL_M,
+  footingCountForBlock,
+  footingPositionsAlongLength,
+  MODULE_WIDTH_M as SPEC_MODULE_WIDTH_M,
+  PANEL_THICKNESS_M,
+  SINGLE_MODULE_MAX_WIDTH_M as SPEC_SINGLE_MODULE_MAX_WIDTH_M,
+} from "../spec-constants.js";
 import { getPart, tileWallRun } from "./wall.js";
 import {
   AssemblyError,
@@ -18,8 +28,10 @@ import {
   type WallOpeningSpec,
 } from "./types.js";
 
-export const MODULE_WIDTH_M = 3.0;
-export const SINGLE_MODULE_MAX_WIDTH_M = 3.4;
+export const MODULE_WIDTH_M = SPEC_MODULE_WIDTH_M;
+export const SINGLE_MODULE_MAX_WIDTH_M = SPEC_SINGLE_MODULE_MAX_WIDTH_M;
+
+export { footingCountForBlock, footingPositionsAlongLength };
 
 export interface BuildingAssemblyInput {
   lengthM: number;
@@ -40,13 +52,21 @@ interface ElevationFrame {
  * rot is a three.js Y-rotation (positive = CCW seen from +Y), chosen so a
  * part's local +X follows `dir` and its thickness (+Z) points INTO the
  * building: rotY(270°) maps +X→+Z, rotY(90°) maps +X→−Z.
+ *
+ * The long (south/north) walls run the FULL external length; the short
+ * (east/west) walls fit BETWEEN them, so their run is the external width
+ * less one panel thickness at each end. This is what makes a 3000 end wall
+ * tile as 2×1200 + a 500 cut panel, exactly as the shop drawings show.
+ * [RhinoSite 6x3 panel set: end-wall panels #10 and #11 are 500 CUTTED]
  */
 function elevationFrames(L: number, W: number): Record<Elevation, ElevationFrame> {
+  const t = PANEL_THICKNESS_M;
+  const endRun = Math.max(0, W - 2 * t);
   return {
     south: { origin: [0, 0, 0], dir: [1, 0, 0], rot: 0, runM: L },
-    east: { origin: [L, 0, 0], dir: [0, 0, 1], rot: 270, runM: W },
-    north: { origin: [L, 0, W], dir: [-1, 0, 0], rot: 180, runM: L },
-    west: { origin: [0, 0, W], dir: [0, 0, -1], rot: 90, runM: W },
+    east: { origin: [L - t, 0, t], dir: [0, 0, 1], rot: 270, runM: endRun },
+    north: { origin: [L, 0, W - t], dir: [-1, 0, 0], rot: 180, runM: L },
+    west: { origin: [0, 0, W - t], dir: [0, 0, -1], rot: 90, runM: endRun },
   };
 }
 
@@ -149,12 +169,15 @@ export function assembleBuilding(
     );
   }
 
-  // --- Footings: 6 per module (2 across width × 3 along length), scaled to
-  //     FFL − chassis allowance ---
-  const chassisAllowanceM = getPart(manifest, "chassis-edge").dimensions.y;
+  // --- Footings ---
+  // Two bearer lines inset 615mm from each edge; along the length, positions
+  // are spaced at most 2600mm between ~800mm end setbacks. That yields the
+  // drawing counts: 4.8m→6, 6m→6, 12m→10 blocks per 3m-wide block.
+  // Block height = FFL − floor build-up (243mm).
+  // [ZIN footing schedule; CD12x9 footing plan]
   const footing = getPart(manifest, "footing-surefoot");
   const fflM = ffl_mm / 1000;
-  const rawHeight = fflM - chassisAllowanceM;
+  const rawHeight = fflM - BUILDING_FLOOR_BUILDUP_M;
   const minH = footing.scalable?.minM ?? footing.dimensions.y;
   const maxH = footing.scalable?.maxM ?? footing.dimensions.y;
   const heightM = Math.min(maxH, Math.max(minH, rawHeight));
@@ -164,12 +187,19 @@ export function assembleBuilding(
     );
   }
   const scaleY = heightM / footing.dimensions.y;
-  const inset = 0.15;
-  const xs = [inset, L / 2 - footing.dimensions.x / 2, L - footing.dimensions.x - inset];
+  const positions = footingPositionsAlongLength(L);
+  const setback = FOOTING_END_SETBACK_TOTAL_M / 2;
+  const span = L - 2 * setback;
+  const xs = Array.from(
+    { length: positions },
+    (_, i) => setback + (span * i) / (positions - 1) - footing.dimensions.x / 2,
+  );
   for (let m = 0; m < modules; m++) {
+    const blockZ0 = m * MODULE_WIDTH_M;
+    const blockDepth = Math.min(MODULE_WIDTH_M, W - blockZ0);
     const zs = [
-      m * MODULE_WIDTH_M + inset,
-      Math.min(m * MODULE_WIDTH_M + MODULE_WIDTH_M, W) - footing.dimensions.z - inset,
+      blockZ0 + BEARER_INSET_M - footing.dimensions.z / 2,
+      blockZ0 + blockDepth - BEARER_INSET_M - footing.dimensions.z / 2,
     ];
     for (const x of xs) {
       for (const z of zs) {

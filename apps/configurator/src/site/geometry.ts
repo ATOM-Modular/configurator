@@ -95,11 +95,17 @@ export function walkwayGeometry(
 // Footing schedule
 // ---------------------------------------------------------------------------
 
-/** Matches the chassis-edge depth used by assembleBuilding. */
-export const CHASSIS_ALLOWANCE_M = 0.25;
-export const MODULE_WIDTH_M = 3.0;
-export const SINGLE_MODULE_MAX_WIDTH_M = 3.4;
-export const FOOTINGS_PER_MODULE = 6;
+import {
+  BUILDING_FLOOR_BUILDUP_M,
+  footingCountForBlock,
+  MODULE_WIDTH_M as SPEC_MODULE_WIDTH_M,
+  SINGLE_MODULE_MAX_WIDTH_M as SPEC_SINGLE_MODULE_MAX_WIDTH_M,
+} from "@atom/assets";
+
+/** FFL − footing block height, from the Zinfra footing schedule. */
+export const CHASSIS_ALLOWANCE_M = BUILDING_FLOOR_BUILDUP_M;
+export const MODULE_WIDTH_M = SPEC_MODULE_WIDTH_M;
+export const SINGLE_MODULE_MAX_WIDTH_M = SPEC_SINGLE_MODULE_MAX_WIDTH_M;
 
 export interface FootingRow {
   buildingId: string;
@@ -115,6 +121,11 @@ export function moduleCount(widthM: number): number {
   return widthM <= SINGLE_MODULE_MAX_WIDTH_M ? 1 : Math.ceil(widthM / MODULE_WIDTH_M);
 }
 
+/**
+ * Footing block height = FFL − floor build-up; count comes from the real
+ * spacing rule (≤2600 between positions, two bearer lines) per 3m block.
+ * [Zinfra footing schedule; Central Darling 12x9 footing plan]
+ */
 export function footingSchedule(
   buildings: (PlacedBuilding & { name: string })[],
 ): FootingRow[] {
@@ -126,7 +137,7 @@ export function footingSchedule(
       ffl_mm: b.ffl_mm,
       footingHeightMm: Math.round(b.ffl_mm - CHASSIS_ALLOWANCE_M * 1000),
       modules,
-      footingCount: modules * FOOTINGS_PER_MODULE,
+      footingCount: modules * footingCountForBlock(b.lengthM),
     };
   });
 }

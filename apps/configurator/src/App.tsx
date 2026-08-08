@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import type { BuildingUse } from "@atom/contracts";
+import { Wordmark } from "./brand/Wordmark";
 import { Stepper } from "./components/Stepper";
 import { BUILDING_USES } from "./state/presets";
 import { activeBuilding, useConfigurator, type WizardStep } from "./state/store";
@@ -73,7 +74,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <span className="brand">ATOM MODULAR</span>
+        <Wordmark />
         <Stepper />
         <ModeToggle />
       </header>

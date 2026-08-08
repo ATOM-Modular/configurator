@@ -6,10 +6,20 @@ const manifest = loadManifest();
 describe("building assembly — 6×3 office (Zinfra site office, FFL 765)", () => {
   const r = assembleBuilding({ lengthM: 6, widthM: 3, ffl_mm: 765 }, manifest);
 
-  it("tiles walls: 14 full panels + 2 cut panels", () => {
-    // south 5 + north 5 (6.0m exact) + east 2 + west 2 (3.0m → 2 + 0.6 cut)
+  it("tiles walls: 14 full panels + 2 cut panels, matching the shop drawing", () => {
+    // [RhinoSite 6x3 panel set: 16 panels — #1–5 and #12–16 full on the long
+    //  walls, #6–9 full on the ends, #10 and #11 "CUTTED" to 500]
+    // Long walls run the full 6.0m = 5 × 1200 exactly.
+    // End walls fit BETWEEN them: 3.0 − 2×0.05 = 2.9m = 2 × 1200 + 500 cut.
     expect(r.counts["panel-wall-1200"]).toBe(14);
     expect(r.counts["panel-wall-cut"]).toBe(2);
+    expect(r.placements.filter((p) => p.partId === "panel-wall-1200")).toHaveLength(14);
+  });
+
+  it("cuts the end-wall closer panel to 500mm as drawn", () => {
+    const cut = r.placements.find((p) => p.partId === "panel-wall-cut")!;
+    // scale is a fraction of the 1200 bay → 500/1200
+    expect(cut.scale![0] * 1.2).toBeCloseTo(0.5, 9);
   });
 
   it("places 4 corner flashings and no tee joins (single module)", () => {
@@ -17,11 +27,13 @@ describe("building assembly — 6×3 office (Zinfra site office, FFL 765)", () =
     expect(r.counts["flashing-tee-join"]).toBeUndefined();
   });
 
-  it("places 6 footings (2×3 pattern) scaled to FFL − chassis allowance", () => {
+  it("places 6 footings scaled to FFL − floor build-up", () => {
+    // [Zinfra footing plan, 6x3: 804/2200/2200/804 → 3 positions × 2 bearer lines]
     expect(r.counts["footing-surefoot"]).toBe(6);
     const footing = r.placements.find((p) => p.partId === "footing-surefoot")!;
-    // 0.765 − 0.25 chassis = 0.515m tall on a 0.3m base part
-    expect(footing.scale![1]).toBeCloseTo(0.515 / 0.3, 6);
+    // 765 − 243 build-up = 522mm block on a 300mm base part
+    // (drawing states 521 — 1mm is drawing rounding)
+    expect(footing.scale![1]).toBeCloseTo(0.522 / 0.3, 6);
     expect(footing.position[1]).toBeCloseTo(-0.765, 9);
   });
 

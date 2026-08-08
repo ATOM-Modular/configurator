@@ -81,7 +81,8 @@ describe("walkway geometry", () => {
 });
 
 describe("footing schedule", () => {
-  it("derives height from FFL − chassis allowance and 6 blocks per module", () => {
+  it("derives height from FFL − floor build-up and real footing spacing", () => {
+    // [Zinfra footing schedule; Central Darling 12x9 footing plan]
     const rows = footingSchedule([
       { ...b("office", 0, 0, 6, 3, 0, 765), name: "Site Office" },
       { ...b("wide", 0, 0, 9, 6, 0, 535), name: "Wide" },
@@ -89,12 +90,27 @@ describe("footing schedule", () => {
     expect(rows[0]).toMatchObject({
       name: "Site Office",
       ffl_mm: 765,
-      footingHeightMm: 515,
+      footingHeightMm: 522, // 765 − 243
       modules: 1,
-      footingCount: 6,
+      footingCount: 6, // 3 positions × 2 bearer lines
     });
-    expect(rows[1]).toMatchObject({ modules: 2, footingCount: 12, footingHeightMm: 285 });
-    expect(totalFootings(rows)).toBe(18);
+    // 9m long → 4 positions → 8 per block; 6m wide → 2 blocks
+    expect(rows[1]).toMatchObject({ modules: 2, footingCount: 16, footingHeightMm: 292 });
+    expect(totalFootings(rows)).toBe(22);
+  });
+
+  it("matches the drawn footing counts for real building lengths", () => {
+    const lengths: [number, number][] = [
+      [4.8, 6], // [Zinfra M/F toilet: 604/1800/1800/604]
+      [6.0, 6], // [Zinfra 6x3:        804/2200/2200/804]
+      [12.0, 10], // [Central Darling:   808/2600×4/808]
+    ];
+    for (const [lengthM, expected] of lengths) {
+      const [row] = footingSchedule([
+        { ...b("x", 0, 0, lengthM, 3), name: `${lengthM}m` },
+      ]);
+      expect(row!.footingCount, `${lengthM}m block`).toBe(expected);
+    }
   });
 
   it("module count matches the engine rule", () => {
