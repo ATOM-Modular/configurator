@@ -17,7 +17,7 @@ import {
   type Material,
 } from "three";
 import { colorbondHex, FRAME_PBR, STEEL_PBR, WALL_PBR } from "./colorbond";
-import { roofNormalMap, wallNormalMap } from "./textures";
+import { roofNormalMap, wallNormalMap, wallSeamMap } from "./textures";
 
 /** Parts whose colour follows the WALL selection. */
 export const WALL_PARTS = new Set(["panel-wall-1200", "panel-wall-cut"]);
@@ -49,19 +49,29 @@ function opaque<T extends Material>(m: T): T {
   return m;
 }
 
-/** Painted EPS panel — matte, with the 1200mm joint groove. */
+/** Painted EPS panel — matte, with a visible 1200mm joint at every angle. */
 export function wallMaterial(colour: string): MeshStandardMaterial {
   const normal = wallNormalMap();
   normal.repeat.set(1, 1);
+  const seam = wallSeamMap();
+  seam.repeat.set(1, 1);
   return opaque(
     new MeshStandardMaterial({
       color: colorbondHex(colour),
+      map: seam, // faint albedo seam so joints read under flat light
       metalness: WALL_PBR.metalness,
       roughness: WALL_PBR.roughness,
       envMapIntensity: WALL_PBR.envMapIntensity,
       normalMap: normal,
-      normalScale: new Vector2(0.4, 0.4),
+      normalScale: new Vector2(0.8, 0.8),
     }),
+  );
+}
+
+/** Galvanised / concrete footing block — dark, matte, no sheen. */
+export function footingMaterial(): MeshStandardMaterial {
+  return opaque(
+    new MeshStandardMaterial({ color: "#6b6d6e", metalness: 0.1, roughness: 0.9 }),
   );
 }
 

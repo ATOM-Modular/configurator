@@ -3,6 +3,9 @@ import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { ContactShadows, OrbitControls } from "@react-three/drei";
 import {
   ACESFilmicToneMapping,
+  BufferAttribute,
+  BufferGeometry,
+  DoubleSide,
   MathUtils,
   MeshStandardMaterial,
   SRGBColorSpace,
@@ -16,11 +19,14 @@ import {
   createPlaceholderPart,
   getPart,
   loadManifest,
+  ROOF_PITCH_DEG,
+  WALL_HEIGHT_EAVE_M,
   type PlacedPart,
 } from "@atom/assets";
 import { footprint, walkwayGeometry } from "../site/geometry";
 import { activeBuilding, useConfigurator, type BuildingState } from "../state/store";
 import {
+  footingMaterial,
   frameMaterial,
   glassMaterial,
   ROOF_PARTS,
@@ -28,7 +34,10 @@ import {
   WALL_PARTS,
   wallMaterial,
 } from "./materials";
-import { groundColorMap, proceduralSky } from "./textures";
+import { groundColorMap, proceduralSky, roofNormalMap } from "./textures";
+
+/** Placeholder roof boxes rendered as a clean solid instead (below). */
+const ROOF_SOLID_PARTS = new Set(["roof-sheet-skillion", "capping-ridge", "capping-fascia"]);
 
 /** ¾-aerial hero pose (SPEC benchmark camera): 45° azimuth, 35° elevation. */
 export function benchmarkPose(view: { cx: number; cz: number; span: number }) {
@@ -80,6 +89,7 @@ function instantiate(
     // Per-mesh so a window's glazing is glass but its frame stays opaque.
     let mat: MeshStandardMaterial | ReturnType<typeof glassMaterial>;
     if (mesh.userData.glass) mat = glassMaterial();
+    else if (p.partId === "footing-surefoot") mat = footingMaterial();
     else if (isWall) mat = wallMaterial(wallColour);
     else if (isSteel) mat = steelMaterial(roofColour, corrugated);
     else if (isOpening) mat = frameMaterial("Surfmist");
@@ -105,11 +115,89 @@ function buildingPlacements(b: BuildingState): PlacedPart[] {
     },
     manifest,
   );
-  return b.gutters
-    ? result.placements
-    : result.placements.filter(
-        (p) => p.partId !== "barge-gutter-section" && p.partId !== "downpipe",
-      );
+  return result.placements.filter((p) => {
+    // the stepped roof/capping boxes are replaced by <RoofSolid>
+    if (ROOF_SOLID_PARTS.has(p.partId)) return false;
+    if (!b.gutters && (p.partId === "barge-gutter-section" || p.partId === "downpipe")) {
+      return false;
+    }
+    return true;
+  });
+}
+
+/**
+ * Clean duo-pitch roof drawn as a solid, replacing the stepped placeholder
+ * sheets. Ridge runs ALONG the length at mid-width, falling 2° to both long
+ * eaves — matching the ATOM roof plans — with a small consistent overhang,
+ * ridge cap, fascia and barge trim in the roof colour.
+ */
+function RoofSolid({ b }: { b: BuildingState }) {
+  const L = b.lengthM;
+  const W = b.widthM;
+  const wallH = WALL_HEIGHT_EAVE_M;
+  const rise = (W / 2) * Math.tan(MathUtils.degToRad(ROOF_PITCH_DEG));
+  const ridgeY = wallH + rise;
+  const ohX = 0.15; // end (barge) overhang
+  const ohZ = 0.2; // eave overhang
+
+  const geom = useMemo(() => {
+    const P = [
+      [-ohX, wallH, -ohZ], // A south eave, x-min
+      [L + ohX, wallH, -ohZ], // B south eave, x-max
+      [-ohX, ridgeY, W / 2], // C ridge x-min
+      [L + ohX, ridgeY, W / 2], // D ridge x-max
+      [-ohX, wallH, W + ohZ], // E north eave x-min
+      [L + ohX, wallH, W + ohZ], // F north eave x-max
+    ];
+    const pos = new Float32Array(P.flat());
+    // u along length, v across the slope → corrugation ribs run down-slope
+    const uv = new Float32Array([0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0]);
+    const idx = [0, 1, 3, 0, 3, 2, 2, 3, 5, 2, 5, 4];
+    const g = new BufferGeometry();
+    g.setAttribute("position", new BufferAttribute(pos, 3));
+    g.setAttribute("uv", new BufferAttribute(uv, 2));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    return g;
+  }, [L, W, wallH, ridgeY]);
+
+  const mat = useMemo(() => {
+    const normal = roofNormalMap().clone();
+    normal.needsUpdate = true;
+    normal.repeat.set(Math.max(8, Math.round(L * 3)), 1);
+    const m = steelMaterial(b.roofColour, false);
+    m.normalMap = normal;
+    m.normalScale = new Vector2(0.6, 0.6);
+    m.side = DoubleSide;
+    return m;
+  }, [b.roofColour, L]);
+
+  const trim = useMemo(() => steelMaterial(b.roofColour, false), [b.roofColour]);
+  const ridgeLen = L + 2 * ohX;
+
+  return (
+    <group>
+      <mesh geometry={geom} material={mat} castShadow receiveShadow />
+      {/* ridge cap */}
+      <mesh position={[L / 2, ridgeY + 0.03, W / 2]} material={trim} castShadow>
+        <boxGeometry args={[ridgeLen, 0.05, 0.16]} />
+      </mesh>
+      {/* fascia along both long eaves */}
+      <mesh position={[L / 2, wallH - 0.04, -ohZ]} material={trim} castShadow>
+        <boxGeometry args={[ridgeLen, 0.16, 0.04]} />
+      </mesh>
+      <mesh position={[L / 2, wallH - 0.04, W + ohZ]} material={trim} castShadow>
+        <boxGeometry args={[ridgeLen, 0.16, 0.04]} />
+      </mesh>
+      {/* barge along both ends */}
+      <mesh position={[-ohX, ridgeY - rise / 2 - 0.02, W / 2]} material={trim} castShadow>
+        <boxGeometry args={[0.04, 0.16, W + 2 * ohZ]} />
+      </mesh>
+      <mesh position={[L + ohX, ridgeY - rise / 2 - 0.02, W / 2]} material={trim} castShadow>
+        <boxGeometry args={[0.04, 0.16, W + 2 * ohZ]} />
+      </mesh>
+    </group>
+  );
 }
 
 function BuildingModel({ b, interactive }: { b: BuildingState; interactive: boolean }) {
@@ -179,6 +267,7 @@ function BuildingModel({ b, interactive }: { b: BuildingState; interactive: bool
           <meshStandardMaterial color={0xe8e4d8} roughness={0.85} metalness={0.03} />
         </mesh>
       ))}
+      <RoofSolid b={b} />
     </group>
   );
 }
@@ -389,7 +478,8 @@ export function ConfigStage() {
       <CaptureRig view={view} />
       <directionalLight
         position={[view.cx + 18, 26, view.cz - 14]}
-        intensity={1.7}
+        intensity={2.4}
+        color={0xfff2e0}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0005}

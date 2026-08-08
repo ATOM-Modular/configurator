@@ -72,6 +72,36 @@ export function wallNormalMap(): Texture {
 }
 
 // ---------------------------------------------------------------------------
+// Wall panel seam map (albedo) — a faint dark line at each 1200mm panel edge
+// so joints read at ANY viewing angle, not just grazing (a normal map alone
+// vanishes under flat overcast light). One panel bay == one UV tile.
+// ---------------------------------------------------------------------------
+let wallSeam: Texture | undefined;
+export function wallSeamMap(): Texture {
+  if (wallSeam) return wallSeam;
+  const S = 128;
+  const c = makeCanvas(S, S);
+  const ctx = c.getContext("2d")!;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, S, S);
+  // seam at the tile boundary (both edges → a solid line where panels meet)
+  const draw = (x: number) => {
+    ctx.fillStyle = "rgba(120,120,120,0.55)";
+    ctx.fillRect(x, 0, 2, S);
+    ctx.fillStyle = "rgba(170,170,170,0.35)";
+    ctx.fillRect(x - 1, 0, 1, S);
+    ctx.fillRect(x + 2, 0, 1, S);
+  };
+  draw(0);
+  draw(S - 2);
+  const t = new CanvasTexture(c);
+  t.colorSpace = SRGBColorSpace;
+  t.wrapS = t.wrapT = RepeatWrapping;
+  wallSeam = t;
+  return t;
+}
+
+// ---------------------------------------------------------------------------
 // Roof corrugation normal map — sinusoidal ribs along one axis. Tiled many
 // times across the sheet; ribs run down-slope.
 // ---------------------------------------------------------------------------
@@ -151,13 +181,14 @@ export function proceduralSky(): Texture {
   const H = 512;
   const c = makeCanvas(W, H);
   const ctx = c.getContext("2d")!;
-  // vertical gradient: warm-white horizon → soft blue zenith
+  // vertical gradient: blue zenith → bright hazy horizon → warm ground
   const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0.0, "#cdd8e4"); // zenith
-  g.addColorStop(0.45, "#dde5ec");
-  g.addColorStop(0.62, "#eef1f3"); // horizon haze
-  g.addColorStop(0.63, "#c9bfa8"); // ground half
-  g.addColorStop(1.0, "#a99e86");
+  g.addColorStop(0.0, "#7fa4c8"); // zenith blue
+  g.addColorStop(0.35, "#a9c4dc");
+  g.addColorStop(0.52, "#dfe9f0"); // horizon haze
+  g.addColorStop(0.5, "#eef3f6");
+  g.addColorStop(0.5, "#c7bda6"); // ground half begins
+  g.addColorStop(1.0, "#a1957c");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
 
