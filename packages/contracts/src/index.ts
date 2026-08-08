@@ -59,6 +59,8 @@ export interface BuildingFlags {
   dda?: boolean;
   /** Gutters/downpipes default ON. Setting false adds a STORMWATER_RISK warning. */
   gutters?: boolean;
+  /** Colourbond roof upgrade (Blaise "Colourbond Roof"). */
+  colourbondRoof?: boolean;
 }
 
 export interface BuildingPlacement {
@@ -173,3 +175,6 @@ export interface PricingErrorBody {
   message: string;
   detail?: { sku?: string; buildingId?: string };
 }
+
+// Blaise pricing vocabulary (shared, boundary-safe — see packages/catalog/blaise/)
+export * from "./blaise.js";

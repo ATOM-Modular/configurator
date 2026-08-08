@@ -195,6 +195,24 @@ describe("multi-building site state", () => {
     expect(s.siteError).toMatch(/already linked/);
   });
 
+  it("wind region C/D enforces Blaise panel-thickness minimums", () => {
+    useConfigurator.getState().setWindRegion("D");
+    expect(active().panelMm).toBeGreaterThanOrEqual(200);
+    expect(active().ceilingMm).toBeGreaterThanOrEqual(250);
+    // building it out carries the separate ceiling thickness + roof flag
+    const b = siteConfig().buildings[0]!;
+    expect(b.panels.wallMm).toBeGreaterThanOrEqual(200);
+    expect(b.panels.ceilingMm).toBeGreaterThanOrEqual(250);
+    expect(b.flags?.colourbondRoof).toBe(true);
+  });
+
+  it("wall and ceiling thickness are independent (Blaise separates them)", () => {
+    useConfigurator.getState().setPanel({ panelMm: 75, ceilingMm: 125 });
+    const b = siteConfig().buildings[0]!;
+    expect(b.panels.wallMm).toBe(75);
+    expect(b.panels.ceilingMm).toBe(125);
+  });
+
   it("site kit placement snaps to the 0.1m grid", () => {
     useConfigurator.getState().addSiteKit({
       sku: "TANK-5000",

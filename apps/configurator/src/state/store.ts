@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import type { BuildingUse, SiteConfig, WindRegion } from "@atom/contracts";
+import {
+  panelUpgradeMinimums,
+  type BuildingUse,
+  type SiteConfig,
+  type WindRegion,
+} from "@atom/contracts";
 import {
   assembleWalkway,
   getPart,
@@ -57,11 +62,16 @@ export interface BuildingState {
   widthM: number;
   ffl_mm: number;
   panelType: string;
+  /** External wall panel thickness (Blaise "Walls Thickness"). */
   panelMm: number;
+  /** Ceiling panel thickness — separate from walls in Blaise. */
+  ceilingMm: number;
   colour: string;
   /** Roof / cappings / gutter — specified separately from the walls. */
   roofColour: string;
   gutters: boolean;
+  /** Colourbond roof upgrade (Blaise "Colourbond Roof"). */
+  colourbondRoof: boolean;
   openings: OpeningInstance[];
   partitionsX: number[];
   roomMeta: RoomMeta[];
@@ -145,10 +155,12 @@ export interface ConfiguratorState {
   setPanel: (p: {
     panelType?: string;
     panelMm?: number;
+    ceilingMm?: number;
     colour?: string;
     roofColour?: string;
   }) => void;
   setGutters: (on: boolean) => void;
+  setColourbondRoof: (on: boolean) => void;
   setFfl: (mm: number) => void;
   setPendingOpening: (partId: string | null) => void;
   placePendingOpening: (elevation: Elevation, bay: number) => void;
@@ -214,9 +226,11 @@ export function makeBuilding(init: Partial<BuildingState> = {}): BuildingState {
     ffl_mm: init.ffl_mm ?? 450,
     panelType: init.panelType ?? "EPS-FR",
     panelMm: init.panelMm ?? 50,
+    ceilingMm: init.ceilingMm ?? 50,
     colour: init.colour ?? "Surfmist",
     roofColour: init.roofColour ?? DEFAULT_ROOF_COLOUR,
     gutters: init.gutters ?? true,
+    colourbondRoof: init.colourbondRoof ?? true,
     openings: init.openings ?? [],
     partitionsX: init.partitionsX ?? [],
     roomMeta: init.roomMeta ?? [defaultRoom(0)],
@@ -313,7 +327,20 @@ export const useConfigurator = create<ConfiguratorState>((set, get) => {
         return next;
       }),
 
-    setWindRegion: (windRegion) => set({ windRegion, windRegionTouched: true }),
+    setWindRegion: (windRegion) =>
+      set((s) => {
+        // Blaise enforces panel-thickness minimums by region (C/D upgrades).
+        const min = panelUpgradeMinimums(windRegion);
+        return {
+          windRegion,
+          windRegionTouched: true,
+          buildings: s.buildings.map((b) => ({
+            ...b,
+            panelMm: Math.max(b.panelMm, min.externalMinMm),
+            ceilingMm: Math.max(b.ceilingMm, min.ceilingMinMm),
+          })),
+        };
+      }),
     setInternalToken: (internalToken) => set({ internalToken }),
 
     addBuilding: (init) => {
@@ -389,6 +416,8 @@ export const useConfigurator = create<ConfiguratorState>((set, get) => {
 
     setPanel: (p) => set(() => patchActive(() => p)),
     setGutters: (gutters) => set(() => patchActive(() => ({ gutters }))),
+    setColourbondRoof: (colourbondRoof) =>
+      set(() => patchActive(() => ({ colourbondRoof }))),
     setFfl: (mm) => set(() => patchActive(() => ({ ffl_mm: Math.max(0, Math.min(1500, mm)) }))),
 
     setPendingOpening: (pendingOpeningPartId) =>
@@ -673,7 +702,7 @@ export function buildSiteConfig(s: SiteConfigInput): SiteConfig {
         panels: {
           type: b.panelType,
           wallMm: b.panelMm,
-          ceilingMm: b.panelMm,
+          ceilingMm: b.ceilingMm,
           colour: b.colour,
         },
         rooms: rooms.map((r) => ({
@@ -683,7 +712,7 @@ export function buildSiteConfig(s: SiteConfigInput): SiteConfig {
           ...(r.meta.acOverrideKw !== null ? { acOverrideKw: r.meta.acOverrideKw } : {}),
         })),
         fitout,
-        flags: { dda: b.dda, gutters: b.gutters },
+        flags: { dda: b.dda, gutters: b.gutters, colourbondRoof: b.colourbondRoof },
         placement: {
           xM: b.placement.xM,
           yM: b.placement.zM,

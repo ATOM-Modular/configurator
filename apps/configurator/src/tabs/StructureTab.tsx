@@ -1,5 +1,6 @@
-import type { WindRegion } from "@atom/contracts";
+import { panelUpgradeMinimums, type WindRegion } from "@atom/contracts";
 import {
+  CEILING_PANEL_THICKNESSES_MM,
   COLORBOND_COLOURS,
   moduleCountFor,
   PANEL_THICKNESSES_MM,
@@ -7,10 +8,22 @@ import {
 } from "../state/presets";
 import { useActiveBuilding, useConfigurator } from "../state/store";
 
+/** Base thicknesses plus any region-enforced upgrade + the current value. */
+function thicknessOptions(base: readonly number[], min: number, current: number): number[] {
+  return [...new Set([...base, min, current])].filter((t) => t >= min).sort((a, b) => a - b);
+}
+
 export function StructureTab() {
   const s = useConfigurator();
   const b = useActiveBuilding();
   const modules = moduleCountFor(b.widthM);
+  const min = panelUpgradeMinimums(s.windRegion);
+  const wallOptions = thicknessOptions(PANEL_THICKNESSES_MM, min.externalMinMm, b.panelMm);
+  const ceilingOptions = thicknessOptions(
+    CEILING_PANEL_THICKNESSES_MM,
+    min.ceilingMinMm,
+    b.ceilingMm,
+  );
 
   return (
     <div className="tab-body">
@@ -62,15 +75,32 @@ export function StructureTab() {
         </select>
       </label>
       <label>
-        Panel thickness
+        Wall panel thickness
         <select value={b.panelMm} onChange={(e) => s.setPanel({ panelMm: Number(e.target.value) })}>
-          {PANEL_THICKNESSES_MM.map((t) => (
+          {wallOptions.map((t) => (
             <option key={t} value={t}>
               {t}mm
             </option>
           ))}
         </select>
       </label>
+      <label>
+        Ceiling panel thickness
+        <select value={b.ceilingMm} onChange={(e) => s.setPanel({ ceilingMm: Number(e.target.value) })}>
+          {ceilingOptions.map((t) => (
+            <option key={t} value={t}>
+              {t}mm
+            </option>
+          ))}
+        </select>
+      </label>
+      {s.windRegion !== "AB" && (
+        <p className="muted">
+          Region {s.windRegion}: panels auto-upgraded to Blaise minimums (
+          {panelUpgradeMinimums(s.windRegion).externalMinMm}mm wall /{" "}
+          {panelUpgradeMinimums(s.windRegion).ceilingMinMm}mm ceiling).
+        </p>
+      )}
 
       <fieldset className="swatches">
         <legend>Wall panel colour</legend>
@@ -110,8 +140,16 @@ export function StructureTab() {
       </label>
 
       <label className="checkbox">
+        <input
+          type="checkbox"
+          checked={b.colourbondRoof}
+          onChange={(e) => s.setColourbondRoof(e.target.checked)}
+        />
+        Colourbond roof
+      </label>
+      <label className="checkbox">
         <input type="checkbox" checked={b.gutters} onChange={(e) => s.setGutters(e.target.checked)} />
-        Gutters &amp; downpipes
+        Colourbond gutters &amp; downpipes
       </label>
       {!b.gutters && (
         <p className="warn-inline">Removing stormwater management adds a site risk warning.</p>

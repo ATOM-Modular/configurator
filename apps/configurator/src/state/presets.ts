@@ -1,4 +1,10 @@
-import type { BuildingUse } from "@atom/contracts";
+import {
+  CEILING_THICKNESSES_MM,
+  CHASSIS_SIZES,
+  COLOURBOND_COLOURS,
+  WALL_THICKNESSES_MM,
+  type BuildingUse,
+} from "@atom/contracts";
 import { buildingModuleCount } from "@atom/assets";
 
 export const BUILDING_USES: BuildingUse[] = [
@@ -16,17 +22,15 @@ export interface SizePreset {
   widthM: number;
 }
 
-/** Sizes step in transport-module increments (3m-wide modules). */
-export const SIZE_PRESETS: SizePreset[] = [
-  { key: "3.6x3", lengthM: 3.6, widthM: 3 },
-  { key: "4.8x3", lengthM: 4.8, widthM: 3 },
-  { key: "6x3", lengthM: 6, widthM: 3 },
-  { key: "7.2x3", lengthM: 7.2, widthM: 3 },
-  { key: "9x3", lengthM: 9, widthM: 3 },
-  { key: "12x3", lengthM: 12, widthM: 3 },
-  { key: "6x6", lengthM: 6, widthM: 6 },
-  { key: "9x6", lengthM: 9, widthM: 6 },
-];
+/**
+ * Standard sizes are Blaise's chassis sizes (Lists → "Chassis Size"), sorted
+ * office-friendly first. A "Custom size" card still allows anything, flagged
+ * as needing a Blaise price.
+ */
+export const SIZE_PRESETS: SizePreset[] = [...CHASSIS_SIZES]
+  .filter((c) => c.lengthM >= c.widthM) // drop the odd portrait chassis for the card grid
+  .sort((a, b) => a.lengthM * a.widthM - b.lengthM * b.widthM)
+  .map((c) => ({ key: c.key, lengthM: c.lengthM, widthM: c.widthM }));
 
 export function presetName(p: SizePreset, use: BuildingUse | string): string {
   const family = use === "Toilet & Amenities" ? "Amenities" : use;
@@ -52,14 +56,39 @@ export function moduleCountFor(widthM: number): number {
   return buildingModuleCount(widthM);
 }
 
-/** Colorbond palette — hex values are PLACEHOLDER pending swatch check. */
-export const COLORBOND_COLOURS: { name: string; hex: string }[] = [
-  { name: "Surfmist", hex: "#E4E2D5" },
-  { name: "Shale Grey", hex: "#BDBFBA" },
-  { name: "Basalt", hex: "#6D6C6E" },
-  { name: "Woodland Grey", hex: "#4D4E4C" },
-  { name: "Monument", hex: "#323233" },
-];
+/**
+ * The 22 Colourbond colours Blaise offers (names from @atom/contracts). Hex
+ * values are approximations for the 3D render — PLACEHOLDER pending a swatch
+ * check with Duane. Any Blaise colour without a mapped hex falls back to a
+ * mid grey so the swatch grid always shows all 22.
+ */
+const COLOURBOND_HEX: Record<string, string> = {
+  "Manor Red": "#66312A",
+  Jasper: "#6D5E4E",
+  "Evening Haze": "#C5BFA4",
+  Monument: "#323233",
+  "Classic Cream": "#E3D9BE",
+  Ironstone: "#45494D",
+  Surfmist: "#E4E2D5",
+  "Shale Grey": "#BDBFBA",
+  "Cottage Green": "#304036",
+  "Pale Eucalypt": "#7C8471",
+  Dune: "#B5AC9A",
+  "Woodland Grey": "#4D4E4C",
+  Windspray: "#969799",
+  "Deep Ocean": "#364152",
+  Paperbark: "#CABFA4",
+  "Night Sky": "#171614",
+  Basalt: "#6D6C6E",
+  Cove: "#C7B79E",
+  Gully: "#6E6A5F",
+  Mangrove: "#5A5B4E",
+  Terrain: "#6A5D4D",
+  Wallaby: "#8E8C81",
+};
+
+export const COLORBOND_COLOURS: { name: string; hex: string }[] =
+  COLOURBOND_COLOURS.map((name) => ({ name, hex: COLOURBOND_HEX[name] ?? "#9a958a" }));
 
 /**
  * Roof, cappings, gutter and downpipe are specified independently of the
@@ -72,4 +101,6 @@ export const COLORBOND_COLOURS: { name: string; hex: string }[] = [
 export const DEFAULT_ROOF_COLOUR = "Monument";
 
 export const PANEL_TYPES = ["EPS-FR", "EPS", "PIR"] as const;
-export const PANEL_THICKNESSES_MM = [50, 75, 100] as const;
+/** Wall vs ceiling thicknesses are separate in Blaise (ceiling adds 125mm). */
+export const PANEL_THICKNESSES_MM = WALL_THICKNESSES_MM;
+export const CEILING_PANEL_THICKNESSES_MM = CEILING_THICKNESSES_MM;
