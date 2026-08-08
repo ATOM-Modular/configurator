@@ -34,6 +34,16 @@ export {
   MODULE_WIDTH_M,
 } from "./rules/modules.js";
 
+/**
+ * Blaise is cost-plus: total cost (materials + labour) marked up to a sell
+ * price by a single GP margin (`Subtotal = TotalCost / (1 − GP)`). The margin
+ * lives on the catalog (server-only). Applying the same markup to every line
+ * is identical to applying GP once at the end, so line amounts still sum to
+ * the subtotal AND GP% comes out at the target.
+ */
+const sellFromCost = (cost: number, catalog: CatalogData): number =>
+  cost / (1 - (catalog.grossProfitMargin ?? 0.45));
+
 /** Price a site and return the shape matching the requested mode. */
 export function price(req: PriceRequest, catalog: CatalogData): PricedEstimate {
   const internal = priceSiteInternal(req.site, catalog);
@@ -72,7 +82,7 @@ export function priceSiteInternal(
       sku: k.sku,
       label: sku.label,
       qty: k.qty,
-      amount_exGst: round2(sku.sellPrice * k.qty),
+      amount_exGst: round2(sellFromCost(sku.standardCost * k.qty, catalog)),
       cost: round2(sku.standardCost * k.qty),
     };
   });
@@ -124,12 +134,13 @@ function priceBuilding(
   ) => {
     const sku = resolveSku(skuId, catalog, b.id);
     const mult = opts?.windAffected ? windMult : 1;
+    const cost = sku.standardCost * qty * mult;
     lines.push({
       sku: skuId,
       label: sku.label + (opts?.labelSuffix ?? ""),
       qty,
-      amount_exGst: round2(sku.sellPrice * qty * mult),
-      cost: round2(sku.standardCost * qty * mult),
+      amount_exGst: round2(sellFromCost(cost, catalog)),
+      cost: round2(cost),
     });
   };
 

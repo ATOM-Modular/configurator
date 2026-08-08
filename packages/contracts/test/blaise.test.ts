@@ -1,18 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   BLAISE_COMPONENT_CATEGORIES,
-  BLAISE_GROSS_PROFIT_MARGIN,
   CHASSIS_SIZES,
   COLOURBOND_COLOURS,
   panelUpgradeMinimums,
 } from "@atom/contracts";
 
 describe("Blaise vocabulary", () => {
-  it("carries the 22 Colourbond colours and 45% GP", () => {
+  it("carries the 22 Colourbond colours (GP margin stays server-side)", () => {
     expect(COLOURBOND_COLOURS).toHaveLength(22);
     expect(COLOURBOND_COLOURS).toContain("Surfmist");
     expect(COLOURBOND_COLOURS).toContain("Monument");
-    expect(BLAISE_GROSS_PROFIT_MARGIN).toBe(0.45);
   });
 
   it("parses the 10 standard chassis sizes", () => {

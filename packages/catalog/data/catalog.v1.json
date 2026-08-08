@@ -3,6 +3,7 @@
   "placeholder": true,
   "note": "ALL RATES ARE PLACEHOLDERS. Real rates arrive as a Blaise export replacing this file — never hand-edit line rates here.",
   "gstRate": 0.1,
+  "grossProfitMargin": 0.45,
   "windRegionMultipliers": {
     "AB": 1.0,
     "C": 1.15,

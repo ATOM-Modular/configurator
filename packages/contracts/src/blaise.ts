@@ -8,10 +8,14 @@
  */
 import type { WindRegion } from "./index.js";
 
-/** Cost-plus margin applied once at the estimate level (Blaise ESTIMATOR). */
-export const BLAISE_GROSS_PROFIT_MARGIN = 0.45;
-
-/** Wall height Blaise uses for wall-area costing (distinct from the 2.754m eave). */
+/**
+ * Wall height Blaise uses for wall-area costing (distinct from the 2.754m
+ * eave). A dimension, safe to share.
+ *
+ * NOTE: the cost-plus GP margin is deliberately NOT here — it's sensitive
+ * pricing data and lives in @atom/catalog (server-only), so the public
+ * bundle never carries the margin.
+ */
 export const BLAISE_WALL_COST_HEIGHT_M = 2.7;
 
 // --- Structure -------------------------------------------------------------

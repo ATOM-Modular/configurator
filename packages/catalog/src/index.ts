@@ -21,6 +21,8 @@ export interface CatalogData {
   version: string;
   placeholder: boolean;
   gstRate: number;
+  /** Blaise cost-plus margin (Subtotal = TotalCost / (1 − GP)). Server-only. */
+  grossProfitMargin: number;
   windRegionMultipliers: Record<string, number>;
   skus: Record<string, CatalogSku>;
 }

@@ -10,6 +10,27 @@ import {
 import { office6x3, toilet48x3, site } from "./fixtures.js";
 
 const catalog = loadCatalog();
+const GP = catalog.grossProfitMargin;
+
+describe("Blaise cost-plus pricing", () => {
+  it("catalog carries the GP margin (45%), not the public contracts package", () => {
+    expect(GP).toBe(0.45);
+  });
+
+  it("marks cost up by a single GP margin: sell = cost / (1 − GP)", () => {
+    const est = priceSiteInternal(site([office6x3()]), catalog);
+    expect(est.total_exGst).toBeCloseTo(est.totals.standardCost / (1 - GP), 0);
+    // GP% comes out at the target regardless of the mix
+    expect(est.totals.gpPercent).toBeCloseTo(GP * 100, 1);
+  });
+
+  it("every building lands on the same GP% (GP applied uniformly)", () => {
+    const est = priceSiteInternal(site([office6x3(), toilet48x3()]), catalog);
+    for (const b of est.perBuilding) {
+      expect(b.gpPercent).toBeCloseTo(GP * 100, 1);
+    }
+  });
+});
 
 describe("module geometry rules", () => {
   it("width ≤ 3.4m is a single module", () => {
