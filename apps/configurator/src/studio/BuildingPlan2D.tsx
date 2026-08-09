@@ -55,7 +55,7 @@ export function BuildingPlan2D() {
   }, [b.id, L, W]);
 
   const drag = useRef<
-    | { kind: "item" | "opening"; id: string }
+    | { kind: "item" | "opening" | "rotate"; id: string }
     | { kind: "wallnode"; id: string; end: 1 | 2 }
     | { kind: "pan"; startClientX: number; startClientY: number; startBox: Box }
     | null
@@ -127,6 +127,13 @@ export function BuildingPlan2D() {
         const m = toM(e.clientX, e.clientY);
         const along = o.elevation === "south" || o.elevation === "north" ? m.xM : m.zM;
         s.moveOpeningBay(d.id, Math.max(0, Math.floor(along / BAY)));
+      }
+    } else if (d?.kind === "rotate") {
+      const it = b.placedItems.find((x) => x.id === d.id);
+      if (it) {
+        const m = toM(e.clientX, e.clientY);
+        const deg = (Math.atan2(m.xM - it.xM, -(m.zM - it.zM)) * 180) / Math.PI;
+        s.setItemRotation(d.id, Math.round(deg / 15) * 15); // snap to 15°
       }
     } else if (d?.kind === "wallnode") {
       const m = toM(e.clientX, e.clientY);
@@ -350,6 +357,22 @@ export function BuildingPlan2D() {
               <circle r={0.26} className={`fp-item-dot ${selected ? "sel" : ""}`} />
               {/* direction tick — rotates with the object so orientation reads */}
               <line x1={0} y1={0} x2={0} y2={-0.26} className="fp-item-dir" />
+              {selected && (
+                <>
+                  <line x1={0} y1={-0.26} x2={0} y2={-0.52} className="fp-rot-stem" />
+                  <circle
+                    cx={0}
+                    cy={-0.52}
+                    r={0.11}
+                    className="fp-rot-handle"
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                      (e.target as Element).setPointerCapture(e.pointerId);
+                      drag.current = { kind: "rotate", id: p.id };
+                    }}
+                  />
+                </>
+              )}
               <text y={0.42} className="fp-item-label">{(cat?.label ?? p.sku).split(" ")[0]}</text>
               <title>{cat?.label ?? p.sku}</title>
             </g>

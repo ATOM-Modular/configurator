@@ -424,3 +424,5 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
 .fp-swing line, .fp-swing path { stroke: var(--text-muted); stroke-width: 0.03; fill: none; opacity: 0.7; }
 .fp-item-dir { stroke: var(--accent); stroke-width: 0.05; }
 .fp-guide { stroke: var(--status-warn); stroke-width: 0.02; stroke-dasharray: 0.1 0.08; pointer-events: none; }
+.fp-rot-stem { stroke: var(--accent); stroke-width: 0.03; }
+.fp-rot-handle { fill: var(--accent); stroke: var(--bg); stroke-width: 0.02; cursor: grab; }

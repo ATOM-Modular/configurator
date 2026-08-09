@@ -206,6 +206,8 @@ export interface ConfiguratorState {
   placeItem: (sku: string, xM: number, zM: number) => string;
   moveItem: (id: string, xM: number, zM: number) => void;
   rotateItem: (id: string, deltaDeg: number) => void;
+  /** Set an item's absolute rotation (drag-to-rotate handle). */
+  setItemRotation: (id: string, deg: number) => void;
   removeItem: (id: string) => void;
   /** Drawn internal-wall segments. */
   addWall: (x1: number, z1: number, x2: number, z2: number) => void;
@@ -440,6 +442,15 @@ export const useConfigurator = create<ConfiguratorState>((set, get) => {
         patchActive((b) => ({
           placedItems: b.placedItems.map((p) =>
             p.id === id ? { ...p, rotationDeg: (p.rotationDeg + deltaDeg + 360) % 360 } : p,
+          ),
+        })),
+      ),
+
+    setItemRotation: (id, deg) =>
+      set(() =>
+        patchActive((b) => ({
+          placedItems: b.placedItems.map((p) =>
+            p.id === id ? { ...p, rotationDeg: ((deg % 360) + 360) % 360 } : p,
           ),
         })),
       ),

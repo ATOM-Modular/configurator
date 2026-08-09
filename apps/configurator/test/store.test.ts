@@ -221,10 +221,12 @@ describe("multi-building site state", () => {
     expect(b.fitout.find((f) => f.sku === "LIGHT-LED-PANEL")?.qty).toBe(2);
     expect(b.fitout.find((f) => f.sku === "GPO-DOUBLE")?.qty).toBe(1);
 
-    // objects move and delete
+    // objects move, rotate and delete
     useConfigurator.getState().moveItem(gpoId, 4.24, 1.17);
     const moved = active().placedItems.find((p) => p.id === gpoId)!;
     expect(moved.xM).toBeCloseTo(4.2, 9); // 0.1m snap
+    useConfigurator.getState().setItemRotation(gpoId, 450); // wraps into [0,360)
+    expect(active().placedItems.find((p) => p.id === gpoId)!.rotationDeg).toBe(90);
     useConfigurator.getState().removeItem(gpoId);
     expect(active().placedItems.some((p) => p.id === gpoId)).toBe(false);
   });
