@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactElement } from "react";
 import { axisSnapEnd, useActiveBuilding, useConfigurator, wallLengthM } from "../state/store";
 import { CATALOGUE_BY_SKU } from "./catalogueData";
 import { getDragged } from "./drag";
+import { snapToGuides } from "./snapping";
 
 type Mode = "select" | "wall";
 type Sel = { kind: "item" | "wall" | "opening"; id: string } | null;
@@ -31,6 +32,21 @@ export function BuildingPlan2D() {
   const [cursor, setCursor] = useState<{ xM: number; zM: number } | null>(null);
   const [sel, setSel] = useState<Sel>(null);
   const [box, setBox] = useState<Box>({ vx: -PAD, vy: -PAD, vw: L + 2 * PAD, vh: W + 2 * PAD });
+  const [guides, setGuides] = useState<{ gx: number | null; gz: number | null }>({ gx: null, gz: null });
+
+  // candidate alignment lines from the shell, walls, other items and openings
+  const snapLines = (excludeItemId?: string) => {
+    const xs = [0, L];
+    const zs = [0, W];
+    for (const w of b.internalWalls) {
+      xs.push(w.x1, w.x2);
+      zs.push(w.z1, w.z2);
+    }
+    for (const it of b.placedItems) if (it.id !== excludeItemId) { xs.push(it.xM); zs.push(it.zM); }
+    for (const o of b.openings) { const p = openingPos(o); xs.push(p.x); zs.push(p.z); }
+    return { xs, zs };
+  };
+  const SNAP_THR = 0.15;
 
   // reset the view when the building changes
   useEffect(() => {
@@ -101,7 +117,10 @@ export function BuildingPlan2D() {
       setBox({ ...d.startBox, vx: d.startBox.vx - dx, vy: d.startBox.vy - dy });
     } else if (d?.kind === "item") {
       const m = toM(e.clientX, e.clientY);
-      s.moveItem(d.id, m.xM, m.zM);
+      const { xs, zs } = snapLines(d.id);
+      const sn = snapToGuides(m.xM, m.zM, xs, zs, SNAP_THR);
+      setGuides({ gx: sn.guideX, gz: sn.guideZ });
+      s.moveItem(d.id, sn.x, sn.z);
     } else if (d?.kind === "opening") {
       const o = b.openings.find((x) => x.id === d.id);
       if (o) {
@@ -111,7 +130,10 @@ export function BuildingPlan2D() {
       }
     } else if (d?.kind === "wallnode") {
       const m = toM(e.clientX, e.clientY);
-      s.moveWallNode(d.id, d.end, m.xM, m.zM);
+      const { xs, zs } = snapLines();
+      const sn = snapToGuides(m.xM, m.zM, xs, zs, SNAP_THR);
+      setGuides({ gx: sn.guideX, gz: sn.guideZ });
+      s.moveWallNode(d.id, d.end, sn.x, sn.z);
     } else if (mode === "wall") {
       setCursor(toM(e.clientX, e.clientY));
     }
@@ -188,7 +210,10 @@ export function BuildingPlan2D() {
         onDrop={onDrop}
         onPointerDown={onSvgPointerDown}
         onPointerMove={onSvgPointerMove}
-        onPointerUp={() => (drag.current = null)}
+        onPointerUp={() => {
+          drag.current = null;
+          setGuides({ gx: null, gz: null });
+        }}
         onClick={onSvgClick}
         onWheel={onWheel}
       >
@@ -200,6 +225,14 @@ export function BuildingPlan2D() {
         <rect className="plan-bg" x={box.vx} y={box.vy} width={box.vw} height={box.vh} fill="url(#fp-grid)" />
 
         <rect x={0} y={0} width={L} height={W} className="fp-shell" />
+
+        {/* live alignment guides while dragging */}
+        {guides.gx !== null && (
+          <line x1={guides.gx} y1={box.vy} x2={guides.gx} y2={box.vy + box.vh} className="fp-guide" />
+        )}
+        {guides.gz !== null && (
+          <line x1={box.vx} y1={guides.gz} x2={box.vx + box.vw} y2={guides.gz} className="fp-guide" />
+        )}
 
         {/* internal walls with dimension labels + endpoint handles when selected */}
         {b.internalWalls.map((w) => {
