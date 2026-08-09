@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { axisSnapEnd, useActiveBuilding, useConfigurator, wallLengthM } from "../state/store";
 import { CATALOGUE_BY_SKU } from "./catalogueData";
 import { getDragged } from "./drag";
@@ -241,31 +241,58 @@ export function BuildingPlan2D() {
           return <line x1={wallStart.xM} y1={wallStart.zM} x2={end.x} y2={end.z} className="fp-wall preview" />;
         })()}
 
-        {/* openings on the shell — selectable + slide along the wall */}
+        {/* openings on the shell — selectable + slide along the wall; doors
+            show a swing arc */}
         {b.openings.map((o) => {
           const p = openingPos(o);
           const selected = sel?.kind === "opening" && sel.id === o.id;
           const w = p.horiz ? 0.9 : 0.14;
           const h = p.horiz ? 0.14 : 0.9;
+          const R = 0.85;
+          const isDoor = o.partId.includes("door");
+          let swing: ReactElement | null = null;
+          if (isDoor && p.horiz) {
+            const din = o.elevation === "south" ? 1 : -1;
+            const hx = p.x - 0.45;
+            const hz = p.z;
+            swing = (
+              <g className="fp-swing">
+                <line x1={hx} y1={hz} x2={hx} y2={hz + din * R} />
+                <path d={`M ${hx} ${hz + din * R} A ${R} ${R} 0 0 ${din > 0 ? 1 : 0} ${hx + R} ${hz}`} />
+              </g>
+            );
+          } else if (isDoor) {
+            const din = o.elevation === "west" ? 1 : -1;
+            const hx = p.x;
+            const hz = p.z - 0.45;
+            swing = (
+              <g className="fp-swing">
+                <line x1={hx} y1={hz} x2={hx + din * R} y2={hz} />
+                <path d={`M ${hx + din * R} ${hz} A ${R} ${R} 0 0 ${din > 0 ? 0 : 1} ${hx} ${hz + R}`} />
+              </g>
+            );
+          }
           return (
-            <rect
-              key={o.id}
-              x={p.x - w / 2}
-              y={p.z - h / 2}
-              width={w}
-              height={h}
-              className={`fp-opening ${selected ? "sel" : ""}`}
-              onClick={(e) => { e.stopPropagation(); setSel({ kind: "opening", id: o.id }); }}
-              onPointerDown={(e) => {
-                if (mode !== "select") return;
-                e.stopPropagation();
-                (e.target as Element).setPointerCapture(e.pointerId);
-                drag.current = { kind: "opening", id: o.id };
-                setSel({ kind: "opening", id: o.id });
-              }}
-            >
-              <title>{o.partId} · {o.elevation} bay {o.startBay + 1}</title>
-            </rect>
+            <g key={o.id}>
+              {swing}
+              <rect
+                x={p.x - w / 2}
+                y={p.z - h / 2}
+                width={w}
+                height={h}
+                className={`fp-opening ${selected ? "sel" : ""}`}
+                onClick={(e) => { e.stopPropagation(); setSel({ kind: "opening", id: o.id }); }}
+                onPointerDown={(e) => {
+                  if (mode !== "select") return;
+                  e.stopPropagation();
+                  (e.target as Element).setPointerCapture(e.pointerId);
+                  drag.current = { kind: "opening", id: o.id };
+                  setSel({ kind: "opening", id: o.id });
+                }}
+              >
+                <title>{o.partId} · {o.elevation} bay {o.startBay + 1}</title>
+              </rect>
+            </g>
           );
         })}
 
@@ -288,6 +315,8 @@ export function BuildingPlan2D() {
               }}
             >
               <circle r={0.26} className={`fp-item-dot ${selected ? "sel" : ""}`} />
+              {/* direction tick — rotates with the object so orientation reads */}
+              <line x1={0} y1={0} x2={0} y2={-0.26} className="fp-item-dir" />
               <text y={0.42} className="fp-item-label">{(cat?.label ?? p.sku).split(" ")[0]}</text>
               <title>{cat?.label ?? p.sku}</title>
             </g>

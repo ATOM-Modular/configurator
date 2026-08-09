@@ -416,3 +416,10 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
 .fp-opening { fill: #85B7EB; stroke: var(--bg); stroke-width: 0.02; cursor: grab; }
 .fp-opening.sel { fill: var(--accent); }
 .fp-node { fill: var(--accent); stroke: var(--bg); stroke-width: 0.02; cursor: grab; }
+
+/* ---------- chassis size slider + door swing / item direction ---------- */
+.chassis-slider { flex-direction: row; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+.chassis-slider strong { color: var(--text); }
+.chassis-slider input[type="range"] { width: 150px; }
+.fp-swing line, .fp-swing path { stroke: var(--text-muted); stroke-width: 0.03; fill: none; opacity: 0.7; }
+.fp-item-dir { stroke: var(--accent); stroke-width: 0.05; }
