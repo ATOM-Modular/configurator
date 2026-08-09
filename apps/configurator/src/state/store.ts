@@ -221,6 +221,8 @@ export interface ConfiguratorState {
   setPendingOpening: (partId: string | null) => void;
   placePendingOpening: (elevation: Elevation, bay: number) => void;
   removeOpening: (id: string) => void;
+  /** Slide an opening along its wall to a new bay (ignored if it doesn't fit). */
+  moveOpeningBay: (id: string, startBay: number) => void;
   addPartition: () => void;
   movePartition: (index: number, xM: number) => void;
   removePartition: (index: number) => void;
@@ -584,6 +586,23 @@ export const useConfigurator = create<ConfiguratorState>((set, get) => {
 
     removeOpening: (id) =>
       set(() => patchActive((b) => ({ openings: b.openings.filter((o) => o.id !== id) }))),
+
+    moveOpeningBay: (id, startBay) =>
+      set(() =>
+        patchActive((b) => {
+          const target = b.openings.find((o) => o.id === id);
+          if (!target) return {};
+          const moved = b.openings.map((o) => (o.id === id ? { ...o, startBay } : o));
+          const runM = target.elevation === "south" || target.elevation === "north" ? b.lengthM : b.widthM;
+          try {
+            // validate the whole elevation still tiles with the moved opening
+            tileWallRun(runM, openingSpecs(moved.filter((o) => o.elevation === target.elevation)), manifest);
+            return { openings: moved };
+          } catch {
+            return {}; // out of range / overlaps another opening — ignore
+          }
+        }),
+      ),
 
     addPartition: () =>
       set(() =>

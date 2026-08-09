@@ -229,6 +229,18 @@ describe("multi-building site state", () => {
     expect(active().placedItems.some((p) => p.id === gpoId)).toBe(false);
   });
 
+  it("slides an opening along its wall to a new bay (rejects invalid)", () => {
+    useConfigurator.getState().addChassis({ lengthM: 6, widthM: 3, chassisType: "office" });
+    useConfigurator.getState().setPendingOpening("door-920-single");
+    useConfigurator.getState().placePendingOpening("south", 1);
+    const openId = active().openings[0]!.id;
+    useConfigurator.getState().moveOpeningBay(openId, 3);
+    expect(active().openings[0]!.startBay).toBe(3);
+    // bay 9 doesn't exist on a 5-bay wall → move rejected, stays at 3
+    useConfigurator.getState().moveOpeningBay(openId, 9);
+    expect(active().openings[0]!.startBay).toBe(3);
+  });
+
   it("drawn internal walls price by l.m. (Blaise Internal Walls Lm)", () => {
     useConfigurator.getState().addWall(0, 1.5, 3, 1.5); // 3.0m
     useConfigurator.getState().addWall(1.5, 0, 1.5, 2); // 2.0m
