@@ -115,6 +115,19 @@ export function wallLengthM(w: WallSegment): number {
   return Math.hypot(w.x2 - w.x1, w.z2 - w.z1);
 }
 
+/**
+ * Snap an end point to a 0°/90° wall from a fixed point — horizontal when the
+ * X delta dominates, otherwise vertical. Internal partitions run axis-aligned.
+ */
+export function axisSnapEnd(
+  fx: number,
+  fz: number,
+  ex: number,
+  ez: number,
+): { x: number; z: number } {
+  return Math.abs(ex - fx) >= Math.abs(ez - fz) ? { x: ex, z: fz } : { x: fx, z: ez };
+}
+
 export interface SiteKitItem {
   id: string;
   /** Blaise SKU (pricing) */
@@ -197,6 +210,8 @@ export interface ConfiguratorState {
   /** Drawn internal-wall segments. */
   addWall: (x1: number, z1: number, x2: number, z2: number) => void;
   removeWall: (id: string) => void;
+  /** Drag a wall endpoint (1 or 2); the wall stays axis-aligned. */
+  moveWallNode: (id: string, end: 1 | 2, xM: number, zM: number) => void;
 
   // actions — buildings
   addBuilding: (init?: Partial<BuildingState>) => string;
@@ -434,16 +449,34 @@ export const useConfigurator = create<ConfiguratorState>((set, get) => {
 
     addWall: (x1, z1, x2, z2) =>
       set(() =>
-        patchActive((b) => ({
-          internalWalls: [
-            ...b.internalWalls,
-            { id: nextId("w"), x1: snap(x1), z1: snap(z1), x2: snap(x2), z2: snap(z2) },
-          ],
-        })),
+        patchActive((b) => {
+          const end = axisSnapEnd(x1, z1, x2, z2);
+          return {
+            internalWalls: [
+              ...b.internalWalls,
+              { id: nextId("w"), x1: snap(x1), z1: snap(z1), x2: snap(end.x), z2: snap(end.z) },
+            ],
+          };
+        }),
       ),
 
     removeWall: (id) =>
       set(() => patchActive((b) => ({ internalWalls: b.internalWalls.filter((w) => w.id !== id) }))),
+
+    moveWallNode: (id, end, xM, zM) =>
+      set(() =>
+        patchActive((b) => ({
+          internalWalls: b.internalWalls.map((w) => {
+            if (w.id !== id) return w;
+            const fx = end === 1 ? w.x2 : w.x1; // the fixed (other) endpoint
+            const fz = end === 1 ? w.z2 : w.z1;
+            const p = axisSnapEnd(fx, fz, xM, zM);
+            return end === 1
+              ? { ...w, x1: snap(p.x), z1: snap(p.z) }
+              : { ...w, x2: snap(p.x), z2: snap(p.z) };
+          }),
+        })),
+      ),
 
     setSetup: (p) =>
       set((s) => {

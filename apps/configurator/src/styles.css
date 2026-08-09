@@ -415,3 +415,4 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
 .cat-search button { background: none; border: none; color: var(--text-muted); padding: 0; }
 .fp-opening { fill: #85B7EB; stroke: var(--bg); stroke-width: 0.02; cursor: grab; }
 .fp-opening.sel { fill: var(--accent); }
+.fp-node { fill: var(--accent); stroke: var(--bg); stroke-width: 0.02; cursor: grab; }

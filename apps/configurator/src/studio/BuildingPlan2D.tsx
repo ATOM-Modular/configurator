@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useActiveBuilding, useConfigurator, wallLengthM } from "../state/store";
+import { axisSnapEnd, useActiveBuilding, useConfigurator, wallLengthM } from "../state/store";
 import { CATALOGUE_BY_SKU } from "./catalogueData";
 import { getDragged } from "./drag";
 
@@ -40,6 +40,7 @@ export function BuildingPlan2D() {
 
   const drag = useRef<
     | { kind: "item" | "opening"; id: string }
+    | { kind: "wallnode"; id: string; end: 1 | 2 }
     | { kind: "pan"; startClientX: number; startClientY: number; startBox: Box }
     | null
   >(null);
@@ -108,6 +109,9 @@ export function BuildingPlan2D() {
         const along = o.elevation === "south" || o.elevation === "north" ? m.xM : m.zM;
         s.moveOpeningBay(d.id, Math.max(0, Math.floor(along / BAY)));
       }
+    } else if (d?.kind === "wallnode") {
+      const m = toM(e.clientX, e.clientY);
+      s.moveWallNode(d.id, d.end, m.xM, m.zM);
     } else if (mode === "wall") {
       setCursor(toM(e.clientX, e.clientY));
     }
@@ -118,7 +122,8 @@ export function BuildingPlan2D() {
     const { xM, zM } = toM(e.clientX, e.clientY);
     if (!wallStart) setWallStart({ xM, zM });
     else {
-      s.addWall(wallStart.xM, wallStart.zM, xM, zM);
+      const end = axisSnapEnd(wallStart.xM, wallStart.zM, xM, zM);
+      s.addWall(wallStart.xM, wallStart.zM, end.x, end.z);
       setWallStart(null);
     }
   };
@@ -196,22 +201,45 @@ export function BuildingPlan2D() {
 
         <rect x={0} y={0} width={L} height={W} className="fp-shell" />
 
-        {/* internal walls with dimension labels */}
+        {/* internal walls with dimension labels + endpoint handles when selected */}
         {b.internalWalls.map((w) => {
           const selected = sel?.kind === "wall" && sel.id === w.id;
           return (
-            <g key={w.id} onClick={(e) => { e.stopPropagation(); setSel({ kind: "wall", id: w.id }); }}>
-              <line x1={w.x1} y1={w.z1} x2={w.x2} y2={w.z2} className={`fp-wall ${selected ? "sel" : ""}`} />
+            <g key={w.id}>
+              <line
+                x1={w.x1}
+                y1={w.z1}
+                x2={w.x2}
+                y2={w.z2}
+                className={`fp-wall ${selected ? "sel" : ""}`}
+                onClick={(e) => { e.stopPropagation(); setSel({ kind: "wall", id: w.id }); }}
+              />
               <text x={(w.x1 + w.x2) / 2} y={(w.z1 + w.z2) / 2 - 0.12} className="fp-dim">
                 {wallLengthM(w).toFixed(2)}m
               </text>
+              {selected &&
+                ([1, 2] as const).map((end) => (
+                  <circle
+                    key={end}
+                    cx={end === 1 ? w.x1 : w.x2}
+                    cy={end === 1 ? w.z1 : w.z2}
+                    r={0.14}
+                    className="fp-node"
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                      (e.target as Element).setPointerCapture(e.pointerId);
+                      drag.current = { kind: "wallnode", id: w.id, end };
+                    }}
+                  />
+                ))}
             </g>
           );
         })}
 
-        {mode === "wall" && wallStart && cursor && (
-          <line x1={wallStart.xM} y1={wallStart.zM} x2={cursor.xM} y2={cursor.zM} className="fp-wall preview" />
-        )}
+        {mode === "wall" && wallStart && cursor && (() => {
+          const end = axisSnapEnd(wallStart.xM, wallStart.zM, cursor.xM, cursor.zM);
+          return <line x1={wallStart.xM} y1={wallStart.zM} x2={end.x} y2={end.z} className="fp-wall preview" />;
+        })()}
 
         {/* openings on the shell — selectable + slide along the wall */}
         {b.openings.map((o) => {

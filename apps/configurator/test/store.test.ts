@@ -248,6 +248,19 @@ describe("multi-building site state", () => {
     expect(line.qty).toBeCloseTo(5.0, 6);
   });
 
+  it("walls snap to 0/90 on draw and when dragging an endpoint", () => {
+    // a diagonal drag becomes horizontal (X delta dominates) → z2 = z1
+    useConfigurator.getState().addWall(0, 1, 3, 1.4);
+    const w = active().internalWalls.at(-1)!;
+    expect(w.z2).toBe(w.z1);
+    expect(w.x2).toBeCloseTo(3, 9);
+    // dragging node 2 off-axis snaps back to axis-aligned from node 1
+    useConfigurator.getState().moveWallNode(w.id, 2, 1.2, 3.3);
+    const w2 = active().internalWalls.find((x) => x.id === w.id)!;
+    expect(w2.x2).toBe(w2.x1); // Z delta now dominates → vertical
+    expect(w2.z2).toBeCloseTo(3.3, 9);
+  });
+
   it("wind region C/D enforces Blaise panel-thickness minimums", () => {
     useConfigurator.getState().setWindRegion("D");
     expect(active().panelMm).toBeGreaterThanOrEqual(200);
