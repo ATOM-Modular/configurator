@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { CATALOGUE, type CatalogueItem } from "./catalogueData";
 import { setDragged } from "./drag";
+import { BuildingControls } from "./BuildingControls";
 import { useConfigurator } from "../state/store";
 
 /**
@@ -40,9 +41,13 @@ export function Catalogue() {
           </button>
         )}
       </div>
+      <div className="cat-group">
+        <div className="cat-group-title">Building</div>
+        <BuildingControls />
+      </div>
       <p className="muted">
         {scope === "site"
-          ? "Drag a building or site-kit item onto the site."
+          ? "Size the building, or drag site kit onto the site."
           : "Drag fit-out into the plan, or an opening onto a wall."}
       </p>
       {groups.map((group) => (

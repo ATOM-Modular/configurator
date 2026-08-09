@@ -7,7 +7,6 @@ import { PricePanel } from "../components/PricePanel";
 import { Wordmark } from "../brand/Wordmark";
 import { Catalogue } from "./Catalogue";
 import { BuildingPlan2D } from "./BuildingPlan2D";
-import { ChassisSizeSlider } from "./ChassisSizeSlider";
 import { getDragged } from "./drag";
 
 /** One-page drag-and-drop configurator (feature-flagged; wizard stays live). */
@@ -67,20 +66,17 @@ export function StudioPage() {
           </select>
         </label>
         {s.scope === "building" && (
-          <>
-            <ChassisSizeSlider />
-            <div className="studio-buildings">
-              {s.buildings.map((b) => (
-                <button
-                  key={b.id}
-                  className={b.id === s.activeId ? "active" : ""}
-                  onClick={() => s.selectBuilding(b.id)}
-                >
-                  {b.name}
-                </button>
-              ))}
-            </div>
-          </>
+          <div className="studio-buildings">
+            {s.buildings.map((b) => (
+              <button
+                key={b.id}
+                className={b.id === s.activeId ? "active" : ""}
+                onClick={() => s.selectBuilding(b.id)}
+              >
+                {b.name}
+              </button>
+            ))}
+          </div>
         )}
       </header>
 

@@ -10,8 +10,6 @@
  *   counted   → drag into a ROOM → increments a per-room count (Blaise model)
  *   sitekit   → drag onto the SITE → places site kit
  */
-import { CHASSIS_SIZES } from "@atom/contracts";
-
 export type CatalogueKind = "chassis" | "opening" | "partition" | "counted" | "sitekit";
 
 export interface CatalogueItem {
@@ -34,34 +32,9 @@ export interface CatalogueGroup {
   items: CatalogueItem[];
 }
 
-const chassisItems: CatalogueItem[] = CHASSIS_SIZES.filter((c) => c.lengthM >= c.widthM).map(
-  (c) => ({
-    id: `chassis-${c.key}`,
-    label: `${c.lengthM} × ${c.widthM}m`,
-    icon: "ti-box",
-    kind: "chassis",
-    lengthM: c.lengthM,
-    widthM: c.widthM,
-    chassisType: "office",
-  }),
-);
-
+// Buildings are created/sized with the length + width sliders
+// (studio/BuildingControls), not draggable cards.
 export const CATALOGUE: CatalogueGroup[] = [
-  {
-    category: "Buildings",
-    items: [
-      ...chassisItems,
-      {
-        id: "chassis-toilet-4.8x3",
-        label: "4.8 × 3m amenities",
-        icon: "ti-box",
-        kind: "chassis",
-        lengthM: 4.8,
-        widthM: 3,
-        chassisType: "toilet",
-      },
-    ],
-  },
   {
     category: "Openings",
     items: [
