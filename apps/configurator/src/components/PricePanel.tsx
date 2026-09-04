@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { PriceLine, SiteConfig } from "@atom/contracts";
 import { isInternal, usePrice } from "../hooks/usePrice";
 import { IS_INTERNAL_BUILD } from "../internal/flag";
@@ -37,6 +37,16 @@ export function PricePanel({ site }: { site: SiteConfig }) {
     internalToken,
   );
   const [enquiryOpen, setEnquiryOpen] = useState(false);
+
+  // The delta badge is a transient FLASH, not a persistent value — show it only
+  // for a moment after each change, otherwise the last delta lingers forever.
+  const [flashDelta, setFlashDelta] = useState(false);
+  useEffect(() => {
+    if (deltaSeq === 0) return;
+    setFlashDelta(true);
+    const t = setTimeout(() => setFlashDelta(false), 2400);
+    return () => clearTimeout(t);
+  }, [deltaSeq]);
 
   const categories = useMemo(() => {
     if (!estimate) return [];
@@ -81,7 +91,7 @@ export function PricePanel({ site }: { site: SiteConfig }) {
           <div className="total-row">
             <span className="big-total">{aud(estimate.total_exGst)}</span>
             <span className="ex">ex GST</span>
-            {deltaExGst !== null && deltaExGst !== 0 && (
+            {flashDelta && deltaExGst !== null && deltaExGst !== 0 && (
               <span
                 key={deltaSeq}
                 className={`delta ${deltaExGst > 0 ? "up" : "down"}`}

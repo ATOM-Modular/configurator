@@ -62,7 +62,7 @@ export function wallMaterial(colour: string): MeshStandardMaterial {
       roughness: WALL_PBR.roughness,
       envMapIntensity: WALL_PBR.envMapIntensity,
       normalMap: normal,
-      normalScale: new Vector2(0.8, 0.8),
+      normalScale: new Vector2(0.28, 0.28),
     }),
   );
 }
@@ -109,20 +109,37 @@ export function frameMaterial(): MeshStandardMaterial {
 }
 
 /**
+ * Door leaf — a brushed powder-coat, lighter than the charcoal reveal frame
+ * so the leaf reads as a distinct panel inside the frame (a door that looks
+ * like a door, not a flat dark rectangle).
+ */
+export function doorLeafMaterial(): MeshStandardMaterial {
+  return opaque(
+    new MeshStandardMaterial({
+      color: "#8b9096",
+      metalness: 0.35,
+      roughness: 0.5,
+      envMapIntensity: 1.0,
+    }),
+  );
+}
+
+/**
  * Glazing — the ONLY transmissive material in the scene (SPEC). Tinted and
- * reflective so it reads as a real dark window against a cream wall rather
- * than a clear hole showing the interior.
+ * reflective so it reads as a real window (picking up the sky) against a cream
+ * wall rather than a flat dark hole. Kept modestly transmissive so the frame
+ * behind it never bleeds through as translucent (the historical wall bug).
  */
 export function glassMaterial(): MeshPhysicalMaterial {
   const m = new MeshPhysicalMaterial({
-    color: "#4a5a63",
+    color: "#6d8794",
     metalness: 0.1,
-    roughness: 0.05,
-    transmission: 0.35,
+    roughness: 0.04,
+    transmission: 0.45,
     thickness: 0.04,
     ior: 1.5,
-    reflectivity: 0.6,
-    envMapIntensity: 1.6,
+    reflectivity: 0.75,
+    envMapIntensity: 2.0,
   });
   m.transparent = true; // required for transmission compositing
   return m;

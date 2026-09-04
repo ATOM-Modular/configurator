@@ -3,11 +3,15 @@ import {
   activeBuilding,
   buildSiteConfig,
   deriveRooms,
+  makeBuilding,
   openingSku,
   useConfigurator,
 } from "../src/state/store";
 import { defaultWindRegion } from "../src/state/windRegion";
 import { moduleCountFor, suggestedOccupancy } from "../src/state/presets";
+import { loadGroups } from "@atom/assets";
+import { price, PricingValidationError } from "@atom/blaise-engine";
+import { loadCatalog } from "@atom/catalog";
 
 const initial = useConfigurator.getState();
 beforeEach(() => useConfigurator.setState(initial, true));
@@ -212,10 +216,10 @@ describe("multi-building site state", () => {
   it("placed fit-out objects count per SKU into the priced fitout", () => {
     // studio buildings are blank (addChassis) — placed items are the only fit-out
     useConfigurator.getState().addChassis({ lengthM: 6, widthM: 3, chassisType: "office" });
-    useConfigurator.getState().placeItem("LIGHT-LED-PANEL", 1, 1);
-    useConfigurator.getState().placeItem("LIGHT-LED-PANEL", 2, 1);
-    const gpoId = useConfigurator.getState().placeItem("GPO-DOUBLE", 3, 1);
-    expect(active().placedItems).toHaveLength(3);
+    useConfigurator.getState().placeInstance("fixture-led-panel", 1, 1);
+    useConfigurator.getState().placeInstance("fixture-led-panel", 2, 1);
+    const gpoId = useConfigurator.getState().placeInstance("fixture-gpo-double", 3, 1);
+    expect(active().placedInstances).toHaveLength(3);
 
     const b = siteConfig().buildings.find((x) => x.id === useConfigurator.getState().activeId)!;
     expect(b.fitout.find((f) => f.sku === "LIGHT-LED-PANEL")?.qty).toBe(2);
@@ -223,12 +227,54 @@ describe("multi-building site state", () => {
 
     // objects move, rotate and delete
     useConfigurator.getState().moveItem(gpoId, 4.24, 1.17);
-    const moved = active().placedItems.find((p) => p.id === gpoId)!;
+    const moved = active().placedInstances.find((p) => p.instanceId === gpoId)!;
     expect(moved.xM).toBeCloseTo(4.2, 9); // 0.1m snap
     useConfigurator.getState().setItemRotation(gpoId, 450); // wraps into [0,360)
-    expect(active().placedItems.find((p) => p.id === gpoId)!.rotationDeg).toBe(90);
+    expect(active().placedInstances.find((p) => p.instanceId === gpoId)!.rotationDeg).toBe(90);
     useConfigurator.getState().removeItem(gpoId);
-    expect(active().placedItems.some((p) => p.id === gpoId)).toBe(false);
+    expect(active().placedInstances.some((p) => p.instanceId === gpoId)).toBe(false);
+  });
+
+  it("ACCEPTANCE: 6 pans + 6 basins, one per cubicle → 6× each, room-assigned, move-in-room is free", () => {
+    // 12×3 toilet block split into 6 × 2m cubicles (rooms r1..r6)
+    const block = makeBuilding({
+      name: "Ablutions",
+      use: "Toilet & Amenities",
+      lengthM: 12,
+      widthM: 3,
+      partitionsX: [2, 4, 6, 8, 10],
+    });
+    useConfigurator.setState({ buildings: [block], activeId: block.id, mode: "single", scope: "building" });
+
+    const s = () => useConfigurator.getState();
+    const rooms = deriveRooms(active());
+    expect(rooms).toHaveLength(6);
+
+    // drop one pan + one basin into the centre of each cubicle
+    const panIds: string[] = [];
+    for (const r of rooms) {
+      const cx = (r.x0M + r.x1M) / 2;
+      panIds.push(s().placeInstance("fixture-bath-pan", cx, 1.5));
+      s().placeInstance("fixture-bath-basin", cx, 2.2);
+    }
+
+    // priced lines: 6× each (summed across room-scoped lines)
+    const fit = () => siteConfig().buildings[0]!.fitout;
+    const qty = (f: { sku: string; qty: number }[], sku: string) =>
+      f.filter((l) => l.sku === sku).reduce((n, l) => n + l.qty, 0);
+    expect(qty(fit(), "BATH-PAN")).toBe(6);
+    expect(qty(fit(), "BATH-BASIN")).toBe(6);
+
+    // each pan is assigned to its own cubicle
+    const panRooms = active().placedInstances.filter((p) => p.sku === "BATH-PAN").map((p) => p.roomId);
+    expect(panRooms.every(Boolean)).toBe(true);
+    expect(new Set(panRooms).size).toBe(6);
+
+    // moving a pan to a new spot in the SAME cubicle must not change the fitout
+    const before = fit();
+    s().moveItem(panIds[0]!, 1.4, 0.6); // still inside r1 [0,2)
+    expect(active().placedInstances.find((p) => p.instanceId === panIds[0])!.roomId).toBe("r1");
+    expect(fit()).toEqual(before); // position is never priced
   });
 
   it("slides an opening along its wall to a new bay (rejects invalid)", () => {
@@ -243,24 +289,24 @@ describe("multi-building site state", () => {
     expect(active().openings[0]!.startBay).toBe(3);
   });
 
-  it("drawn internal walls price by l.m. (Blaise Internal Walls Lm)", () => {
-    useConfigurator.getState().addWall(0, 1.5, 3, 1.5); // 3.0m
-    useConfigurator.getState().addWall(1.5, 0, 1.5, 2); // 2.0m
+  it("drawn partitions price by l.m. (Blaise Internal Walls Lm)", () => {
+    useConfigurator.getState().drawPartition(0, 1.5, 3, 1.5); // 3.0m
+    useConfigurator.getState().drawPartition(1.5, 0, 1.5, 2); // 2.0m
     const line = siteConfig().buildings[0]!.fitout.find((f) => f.sku === "INTERNAL-WALL-LM")!;
     expect(line.qty).toBeCloseTo(5.0, 6);
   });
 
-  it("walls snap to 0/90 on draw and when dragging an endpoint", () => {
-    // a diagonal drag becomes horizontal (X delta dominates) → z2 = z1
-    useConfigurator.getState().addWall(0, 1, 3, 1.4);
-    const w = active().internalWalls.at(-1)!;
-    expect(w.z2).toBe(w.z1);
-    expect(w.x2).toBeCloseTo(3, 9);
+  it("partitions snap to 0/90 on draw and when dragging an endpoint", () => {
+    // a diagonal draw becomes horizontal (X delta dominates) → y2 = y1
+    const id = useConfigurator.getState().drawPartition(0, 1, 3, 1.4);
+    const w = active().placedInstances.find((p) => p.instanceId === id)!;
+    expect(w.y2M).toBe(w.yM);
+    expect(w.x2M).toBeCloseTo(3, 9);
     // dragging node 2 off-axis snaps back to axis-aligned from node 1
-    useConfigurator.getState().moveWallNode(w.id, 2, 1.2, 3.3);
-    const w2 = active().internalWalls.find((x) => x.id === w.id)!;
-    expect(w2.x2).toBe(w2.x1); // Z delta now dominates → vertical
-    expect(w2.z2).toBeCloseTo(3.3, 9);
+    useConfigurator.getState().moveInstanceNode(id, 2, 1.2, 3.3);
+    const w2 = active().placedInstances.find((p) => p.instanceId === id)!;
+    expect(w2.x2M).toBe(w2.xM); // Y delta now dominates → vertical
+    expect(w2.y2M).toBeCloseTo(3.3, 9);
   });
 
   it("wind region C/D enforces Blaise panel-thickness minimums", () => {
@@ -295,5 +341,67 @@ describe("multi-building site state", () => {
     const k = useConfigurator.getState().siteKit[0]!;
     expect(k.xM).toBeCloseTo(3.2, 9);
     expect(k.zM).toBeCloseTo(1.0, 9);
+  });
+});
+
+describe("assembly groups + partitions — Marsden Park toilet block", () => {
+  const catalog = loadCatalog();
+  const block = (dda: boolean) => {
+    const b = makeBuilding({
+      name: "Amenities",
+      use: "Toilet & Amenities",
+      lengthM: 12,
+      widthM: 3,
+      partitionsX: [2, 4, 6, 8, 10], // six 2m cubicles
+      dda,
+    });
+    useConfigurator.setState({ buildings: [b], activeId: b.id, mode: "single", scope: "building" });
+    return b;
+  };
+
+  it("groups offered are DDA-gated (accessible set only with the flag on)", () => {
+    const offered = (dda: boolean) =>
+      loadGroups().groups.filter((g) => (g.dda ? dda : true)).map((g) => g.id);
+    expect(offered(false)).not.toContain("accessible-wc-set");
+    expect(offered(true)).toContain("accessible-wc-set");
+  });
+
+  it("ACCEPTANCE: 5 cubicles + 1 accessible set + drawn dividers → counts, l.m., price per drop", () => {
+    block(true);
+    const s = () => useConfigurator.getState();
+    const rooms = deriveRooms(active());
+    const qty = (sku: string) =>
+      siteConfig().buildings[0]!.fitout.filter((f) => f.sku === sku).reduce((n, f) => n + f.qty, 0);
+    const total = () => price({ mode: "public", site: siteConfig() }, catalog).total_exGst;
+
+    // one toilet-cubicle group in each of the first five cubicles; price must
+    // rise with every drop (position isn't priced, but the new parts are)
+    let prev = total();
+    rooms.slice(0, 5).forEach((r) => {
+      s().dropGroup("toilet-cubicle", r.x0M + 0.2, 0.3);
+      const now = total();
+      expect(now).toBeGreaterThan(prev);
+      prev = now;
+    });
+    // accessible set into the sixth cubicle
+    s().dropGroup("accessible-wc-set", rooms[5]!.x0M + 0.2, 0.3);
+    // draw the five dividing partitions (full 3m width each = 15 l.m.)
+    for (const x of [2, 4, 6, 8, 10]) s().drawPartition(x, 0, x, 3);
+
+    // fixture counts match the schedule
+    expect(qty("BATH-PAN")).toBe(5); // one per toilet cubicle
+    expect(qty("BATH-BASIN")).toBe(6); // 5 cubicles + 1 accessible
+    expect(qty("BATH-ASSY-ACCESSIBLE")).toBe(1);
+    // partition lineal metres: 5×3m drawn + 2.2m from the accessible group
+    expect(qty("INTERNAL-WALL-LM")).toBeCloseTo(17.2, 6);
+
+    // DDA on → the accessible fixture prices without error
+    expect(() => price({ mode: "public", site: siteConfig() }, catalog)).not.toThrow();
+  });
+
+  it("accessible fixtures are rejected by the engine when DDA is off", () => {
+    block(false);
+    useConfigurator.getState().dropGroup("accessible-wc-set", 1, 1);
+    expect(() => price({ mode: "public", site: siteConfig() }, catalog)).toThrow(PricingValidationError);
   });
 });

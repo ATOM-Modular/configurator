@@ -7,7 +7,12 @@ import { PricePanel } from "../components/PricePanel";
 import { Wordmark } from "../brand/Wordmark";
 import { Catalogue } from "./Catalogue";
 import { BuildingPlan2D } from "./BuildingPlan2D";
-import { getDragged } from "./drag";
+import { WalkTouchControls } from "./WalkTouchControls";
+import { PART_BY_ID } from "./manifestCatalogue";
+
+/** Coarse pointer (touch tablet) → show on-screen walk controls. */
+const isCoarsePointer =
+  typeof window !== "undefined" && !!window.matchMedia?.("(pointer: coarse)").matches;
 
 /** One-page drag-and-drop configurator (feature-flagged; wizard stays live). */
 export function StudioPage() {
@@ -57,6 +62,15 @@ export function StudioPage() {
             </button>
           ))}
         </div>
+        {s.view === "3d" && (
+          <button
+            className={`studio-walk ${s.walkMode ? "active" : ""}`}
+            onClick={() => s.setWalkMode(!s.walkMode)}
+            title="Walk around and step inside the building"
+          >
+            <i className="ti ti-walk" aria-hidden="true" /> {s.walkMode ? "Exit walk" : "Walk"}
+          </button>
+        )}
         <label className="studio-region">
           Region
           <select value={s.windRegion} onChange={(e) => s.setWindRegion(e.target.value as WindRegion)}>
@@ -85,6 +99,17 @@ export function StudioPage() {
 
         <main className="studio-stage">
           <StudioSurface />
+          {s.view === "3d" && s.walkMode && isCoarsePointer && <WalkTouchControls />}
+          {s.view === "3d" && s.walkMode && (
+            <div className="walk-hint">
+              <i className="ti ti-walk" aria-hidden="true" />
+              {isCoarsePointer ? (
+                <> <strong>Left stick</strong> move · <strong>drag</strong> to look around</>
+              ) : (
+                <> Click to look · <strong>W A S D</strong> move · <strong>Shift</strong> run · <strong>Esc</strong> release mouse</>
+              )}
+            </div>
+          )}
         </main>
 
         <PricePanel site={site} />
@@ -95,10 +120,13 @@ export function StudioPage() {
 
 /** The active surface for the current scope × view. */
 function StudioSurface() {
+  // All hooks must run every render (Rules of Hooks) — declare them before any
+  // early return, even though `armed`/`setArmed` are only used in Site 2D.
   const scope = useConfigurator((s) => s.scope);
   const view = useConfigurator((s) => s.view);
-  const addChassis = useConfigurator((s) => s.addChassis);
   const addSiteKit = useConfigurator((s) => s.addSiteKit);
+  const armed = useConfigurator((s) => s.armed);
+  const setArmed = useConfigurator((s) => s.setArmed);
 
   if (view === "3d") {
     // ConfigStage renders active building (single) or whole site per store.mode
@@ -109,27 +137,25 @@ function StudioSurface() {
     return <BuildingPlan2D />;
   }
 
-  // Site 2D: SiteCanvas handles move/walkways; the wrapper accepts drops to
-  // create buildings (chassis) or place site kit (auto-positioned for v1).
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const item = getDragged();
-    if (!item) return;
-    if (item.kind === "chassis" && item.lengthM && item.widthM) {
-      addChassis({
-        lengthM: item.lengthM,
-        widthM: item.widthM,
-        chassisType: item.chassisType ?? "office",
-      });
-    } else if (item.kind === "sitekit" && item.sku && item.partId) {
-      addSiteKit({ sku: item.sku, partId: item.partId, label: item.label, xM: 0, zM: -2.5, rotationDeg: 0 });
+  // Site 2D: SiteCanvas handles move/walkways; the wrapper places an armed
+  // site-kit item on click (auto-positioned for v1). Buildings are added with
+  // the "Add building" control.
+  const onClick = () => {
+    if (armed?.kind !== "part") return;
+    if (PART_BY_ID.get(armed.partId)?.category === "sitekit") {
+      addSiteKit({ sku: armed.sku, partId: armed.partId, label: armed.displayName, xM: 0, zM: -2.5, rotationDeg: 0 });
+      setArmed(null);
     }
   };
 
   return (
-    <div className="site-drop" onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
+    <div className="site-drop" onClick={onClick}>
       <SiteCanvas />
-      <p className="muted">Drag a building or site-kit item here to add it.</p>
+      <p className="muted">
+        {armed?.kind === "part"
+          ? `Tap the site to place ${armed.displayName}`
+          : "Tap a site-kit item, then tap the site · add a building from the catalogue"}
+      </p>
     </div>
   );
 }

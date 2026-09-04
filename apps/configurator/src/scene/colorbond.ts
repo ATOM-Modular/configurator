@@ -27,8 +27,9 @@ export function colorbondHex(name: string): string {
   return COLORBOND.find((c) => c.name === name)?.hex ?? "#E4E2D5";
 }
 
-/** Painted EPS panel — matte, minimal specular. */
-export const WALL_PBR = { metalness: 0.05, roughness: 0.7, envMapIntensity: 0.85 } as const;
+/** Painted EPS panel — matte, minimal specular. Low envMapIntensity so the
+ *  sky doesn't wash the walls flat and kill the sunlit-vs-shaded read. */
+export const WALL_PBR = { metalness: 0.04, roughness: 0.82, envMapIntensity: 0.55 } as const;
 
 /** Colorbond coated steel — SPEC: metalness ~0.6, roughness ~0.35. */
 export const STEEL_PBR = { metalness: 0.6, roughness: 0.35, envMapIntensity: 1.0 } as const;

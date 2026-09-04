@@ -102,7 +102,7 @@ describe("Central Darling — schedules match the drawing", () => {
     const accessibleBlock = s.buildings.find((b) => b.name.includes("Accessible"))!;
     expect(accessibleBlock.dda).toBe(true);
     const other = s.buildings.find((b) => !b.name.includes("Accessible"))!;
-    expect(other.extraFitout.some((f) => f.sku.startsWith("BATH-ACC-"))).toBe(false);
+    expect(other.placedInstances.some((f) => f.sku.startsWith("BATH-ACC-"))).toBe(false);
   });
 
   it("both blocks route to the toilet chassis tier", () => {

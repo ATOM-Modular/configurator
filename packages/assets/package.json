@@ -7,7 +7,8 @@
   "types": "src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "assets:check": "tsx scripts/assets-check.ts"
+    "assets:check": "tsx scripts/assets-check.ts",
+    "thumbs": "node scripts/gen-thumbs.mjs"
   },
   "dependencies": {
     "three": "^0.169.0",

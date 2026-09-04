@@ -37,6 +37,25 @@ export const manifestPartSchema = z.object({
    *            site kit
    */
   anchorFrame: z.enum(["wall", "roof", "ground"]),
+  /** Palette label shown in the browsable catalogue. */
+  displayName: z.string().min(1),
+  /** Search + grouping keywords for the palette. */
+  tags: z.array(z.string().min(1)),
+  /**
+   * Top-down icon path (parts/thumbs/<id>.png). Optional: the thumbnail
+   * generator renders a placeholder so the palette works before real art,
+   * and authored PNGs later overwrite the file — no code change.
+   */
+  thumbnail2d: z.string().optional(),
+  /**
+   * How the configurator places an instance of this part:
+   *   bay-grid     → structural wall panels (tile on the 1200 grid)
+   *   wall-mounted → openings: snap to nearest 1200 bay, swap the bay
+   *   floor-free   → fixtures: drop anywhere in a room, rotate, assigned to
+   *                  the room dropped into
+   *   partition    → internal wall segments
+   */
+  placementMode: z.enum(["bay-grid", "wall-mounted", "floor-free", "partition"]),
   /** metres, glTF +Y up */
   dimensions: z.object({ x: z.number().positive(), y: z.number().positive(), z: z.number().positive() }),
   tilingAxis: z.enum(["x", "z", "none"]),

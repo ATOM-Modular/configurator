@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from "react";
-import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
-import { ContactShadows, OrbitControls } from "@react-three/drei";
+import { useEffect, useMemo, useRef } from "react";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { ContactShadows, OrbitControls, PointerLockControls } from "@react-three/drei";
 import {
   ACESFilmicToneMapping,
   BufferAttribute,
@@ -10,9 +10,12 @@ import {
   MeshStandardMaterial,
   SRGBColorSpace,
   Vector2,
+  Vector3,
   type Group,
   type Mesh,
+  type PerspectiveCamera,
 } from "three";
+import { resetWalkInput, walkInput } from "./walkInput";
 import {
   assembleBuilding,
   assembleWalkway,
@@ -27,6 +30,7 @@ import {
 import { footprint, walkwayGeometry } from "../site/geometry";
 import { activeBuilding, useConfigurator, type BuildingState } from "../state/store";
 import {
+  doorLeafMaterial,
   footingMaterial,
   frameMaterial,
   glassMaterial,
@@ -55,6 +59,25 @@ export function benchmarkPose(view: { cx: number; cz: number; span: number }) {
 
 const manifest = loadManifest();
 const prototypes = new Map<string, Group>();
+
+/**
+ * Roof-trim developed dimensions, read from the manufacture drawings via
+ * manifest.trimSpecs (Central Darling / RhinoSite / Air Liquide). RoofSolid
+ * renders to THESE numbers so the flashing reconciles with the shop drawings
+ * rather than eyeballed values. Millimetres → metres.
+ */
+const _ts = (manifest.trimSpecs ?? {}) as Record<string, { [k: string]: number }>;
+const _mm = (v: number | undefined, fallback: number) => (v ?? fallback) / 1000;
+const TRIM = {
+  oversail: _mm(_ts.oversailMm as unknown as number, 65),
+  fasciaFace: _mm(_ts.fasciaCappingRaked?.faceMm, 320),
+  fasciaReturn: _mm(_ts.fasciaCappingRaked?.returnMm, 155),
+  bargeTop: _mm(_ts.bargeCappingEnd?.topMm, 100),
+  bargeFace: _mm(_ts.bargeCappingEnd?.faceMm, 125),
+  gutterFace: _mm(_ts.gutterQuadEnd?.faceMm, 100),
+  gutterDepth: _mm(_ts.gutterQuadEnd?.depthMm, 100),
+  ridgeDev: _mm(_ts.ridgeCap?.developedWidthMm, 550),
+};
 
 function instantiate(
   p: PlacedPart,
@@ -92,9 +115,13 @@ function instantiate(
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
-    // Per-mesh so a window's glazing is glass but its frame stays opaque.
+    // Per-mesh so a window's glazing is glass, its surround takes the wall
+    // colour, its leaf a powder-coat, and only the reveal frame stays charcoal.
     let mat: MeshStandardMaterial | ReturnType<typeof glassMaterial>;
     if (mesh.userData.glass) mat = glassMaterial();
+    else if (mesh.userData.steel) mat = steelMaterial(roofColour, false);
+    else if (mesh.userData.wallSurround) mat = wallMaterial(wallColour);
+    else if (mesh.userData.leaf) mat = doorLeafMaterial();
     else if (p.partId === "footing-surefoot") mat = footingMaterial();
     else if (isWall) mat = wallMaterial(wallColour);
     else if (isSteel) mat = steelMaterial(roofColour, corrugated);
@@ -150,9 +177,8 @@ function RoofSolid({ b }: { b: BuildingState }) {
   const pitch = MathUtils.degToRad(ROOF_PITCH_DEG);
   const rise = Math.tan(pitch) * (L / 2);
   const ridgeH = eaveH + rise;
-  const oh = 0.07; // oversail on all four sides
-  const fasciaDrop = 0.32; // raking fascia face
-  const fflM = b.ffl_mm / 1000;
+  const oh = TRIM.oversail; // 65mm oversail past the wall line (drawings)
+  const fasciaDrop = TRIM.fasciaFace; // 320mm raking-fascia face (drawings)
   const multi = W > 3.4;
   const rakeAngle = Math.atan2(rise, L / 2);
   const slopeLen = Math.hypot(L / 2, rise);
@@ -220,18 +246,22 @@ function RoofSolid({ b }: { b: BuildingState }) {
   const joins: number[] = [];
   if (multi) for (let z = MODULE_WIDTH_M; z < W - 0.01; z += MODULE_WIDTH_M) joins.push(z);
 
-  const downZ = multi ? [0.2, W - 0.2] : [0.2];
+  // Downpipes sit ~120mm in from the end-wall corners; stop just under the
+  // chassis so they hug the building envelope instead of dangling to the ground
+  // through the open under-floor.
+  const dpZ = multi ? [0.12, W - 0.12] : [0.12];
   const dpTop = eaveH;
-  const dpBottom = -fflM - 0.05; // just below the chassis line
+  const dpBottom = -0.2; // just below the chassis underside (−0.175)
   const dpH = dpTop - dpBottom;
 
   return (
     <group>
       <mesh geometry={geom} material={mat} castShadow receiveShadow />
 
-      {/* ridge cap ACROSS the width at mid-length */}
-      <mesh position={[L / 2, ridgeH + 0.02, W / 2]} material={trim} castShadow>
-        <boxGeometry args={[0.14, 0.05, W + 2 * oh]} />
+      {/* ridge cap ACROSS the width at mid-length (550mm developed, folded
+          shallow over the 2° ridge → ~half that as a horizontal footprint) */}
+      <mesh position={[L / 2, ridgeH + 0.015, W / 2]} material={trim} castShadow>
+        <boxGeometry args={[TRIM.ridgeDev / 2, 0.04, W + 2 * oh]} />
       </mesh>
 
       {/* module-join cover flashing — raised, full length, following the fall
@@ -257,35 +287,56 @@ function RoofSolid({ b }: { b: BuildingState }) {
         </group>
       ))}
 
-      {b.gutters && (
-        <>
-          {/* quad gutter across each SHORT end, full width */}
-          {[-oh, L + oh].map((x, i) => (
+      {/* Barge capping down each SHORT end (drawings: 100mm top return lapping
+          over the roof + 125mm face over the end wall). Roof-edge trim — always
+          present, gutters or not — this is what closes the eave at the ends. */}
+      {[-oh, L + oh].map((x, i) => {
+        const inward = i === 0 ? 1 : -1; // lap the top return back over the roof
+        return (
+          <group key={`barge-${i}`}>
             <mesh
-              key={`gut-${i}`}
-              position={[x, eaveH - 0.06, W / 2]}
+              position={[x + inward * (TRIM.bargeTop / 2), eaveH + 0.02, W / 2]}
               material={trim}
               castShadow
             >
-              <boxGeometry args={[0.12, 0.12, W + 2 * oh]} />
+              <boxGeometry args={[TRIM.bargeTop, 0.04, W + 2 * oh]} />
             </mesh>
-          ))}
-          {/* end capping above each gutter */}
+            <mesh
+              position={[x, eaveH - TRIM.bargeFace / 2, W / 2]}
+              material={trim}
+              castShadow
+            >
+              <boxGeometry args={[0.04, TRIM.bargeFace, W + 2 * oh]} />
+            </mesh>
+          </group>
+        );
+      })}
+
+      {b.gutters && (
+        <>
+          {/* quad gutter (100×100) across each SHORT end, under the barge face */}
           {[-oh, L + oh].map((x, i) => (
-            <mesh key={`cap-${i}`} position={[x, eaveH + 0.05, W / 2]} material={trim} castShadow>
-              <boxGeometry args={[0.1, 0.05, W + 2 * oh]} />
+            <mesh
+              key={`gut-${i}`}
+              position={[x, eaveH - TRIM.bargeFace - TRIM.gutterFace / 2, W / 2]}
+              material={trim}
+              castShadow
+            >
+              <boxGeometry args={[TRIM.gutterDepth, TRIM.gutterFace, W + 2 * oh]} />
             </mesh>
           ))}
-          {/* 100×50 downpipes at the end-wall corners */}
-          {[0.02, L - 0.02].flatMap((x, xi) =>
-            downZ.map((z, zi) => (
+          {/* 100×50 downpipes flat against the EXTERIOR of each end wall,
+              hugging the corner: wide face (0.1) runs along the wall, the 0.05
+              edge protrudes. */}
+          {[-0.025, L + 0.025].flatMap((x, xi) =>
+            dpZ.map((z, zi) => (
               <mesh
                 key={`dp-${xi}-${zi}`}
                 position={[x, dpBottom + dpH / 2, z]}
                 material={trim}
                 castShadow
               >
-                <boxGeometry args={[0.1, dpH, 0.05]} />
+                <boxGeometry args={[0.05, dpH, 0.1]} />
               </mesh>
             )),
           )}
@@ -347,6 +398,12 @@ function BuildingModel({ b, interactive }: { b: BuildingState; interactive: bool
       position={[b.placement.xM, b.ffl_mm / 1000, b.placement.zM]}
       rotation={[0, MathUtils.degToRad(-b.placement.rotationDeg), 0]}
     >
+      {/* interior floor at FFL (group origin) — a surface to stand on in walk
+          mode, and closes the view through the doorway in orbit mode */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[b.lengthM / 2, 0.002, b.widthM / 2]} receiveShadow>
+        <planeGeometry args={[b.lengthM, b.widthM]} />
+        <meshStandardMaterial color={0xd8d3c8} roughness={0.92} metalness={0} />
+      </mesh>
       {objects.map((o, i) => (
         <primitive
           key={i}
@@ -362,6 +419,21 @@ function BuildingModel({ b, interactive }: { b: BuildingState; interactive: bool
           <meshStandardMaterial color={0xe8e4d8} roughness={0.85} metalness={0.03} />
         </mesh>
       ))}
+      {/* drawn partition segments (placedInstances with a second endpoint) */}
+      {b.placedInstances
+        .filter((p) => p.x2M !== undefined && p.y2M !== undefined)
+        .map((p) => {
+          const cx = (p.xM + p.x2M!) / 2;
+          const cz = (p.yM + p.y2M!) / 2;
+          const len = Math.hypot(p.x2M! - p.xM, p.y2M! - p.yM);
+          const angle = Math.atan2(p.y2M! - p.yM, p.x2M! - p.xM);
+          return (
+            <mesh key={p.instanceId} position={[cx, 1.35, cz]} rotation={[0, -angle, 0]} castShadow>
+              <boxGeometry args={[len, 2.7, 0.09]} />
+              <meshStandardMaterial color={0xe8e4d8} roughness={0.85} metalness={0.03} />
+            </mesh>
+          );
+        })}
       <RoofSolid b={b} />
     </group>
   );
@@ -527,10 +599,222 @@ function GroundPlane({ cx, cz }: { cx: number; cz: number }) {
   );
 }
 
+// --- First-person walkthrough -------------------------------------------
+const EYE_H = 1.6; // eye height above the floor (metres)
+const WALK_SPEED = 2.8; // m/s
+const RUN_SPEED = 5.2; // m/s (Shift)
+const PLAYER_R = 0.32; // clearance kept from solid walls
+
+interface DoorGaps {
+  south: [number, number][];
+  north: [number, number][];
+  west: [number, number][];
+  east: [number, number][];
+}
+
+/** Door openings expressed as clear spans along each elevation (local metres). */
+function doorGaps(b: BuildingState): DoorGaps {
+  const g: DoorGaps = { south: [], north: [], west: [], east: [] };
+  for (const o of b.openings) {
+    if (!o.partId.includes("door")) continue; // only doors are walk-through
+    const m = /(\d{3,4})/.exec(o.partId);
+    const w = m ? +m[1]! / 1000 : 0.9;
+    const bays = o.partId.includes("1600") ? 2 : 1;
+    const centre = (o.startBay + bays / 2) * 1.2;
+    const half = w / 2 + 0.12;
+    g[o.elevation].push([centre - half, centre + half]);
+  }
+  return g;
+}
+const inGap = (t: number, gaps: [number, number][]) =>
+  gaps.some(([a, b]) => t >= a && t <= b);
+
+/**
+ * First-person controls (desktop + touch):
+ *  - Look: pointer-lock mouse on desktop, or the on-screen look-pad on touch —
+ *    both feed walkInput.look. Move: WASD/arrows + the on-screen joystick
+ *    (walkInput.move). Shift runs.
+ *  - Eye height locked to the building floor, with a subtle walking head-bob.
+ *  - Wider FOV than the orbit hero view; restored on exit.
+ *  - Walls are solid (keep PLAYER_R clearance, can't be crossed) EXCEPT at door
+ *    openings, so you enter by walking through a door. Collision runs in the
+ *    building's local frame so rotated placements work.
+ */
+function WalkControls({ b }: { b: BuildingState }) {
+  const camera = useThree((s) => s.camera);
+  // Desktop → drei PointerLockControls owns mouse-look (click to capture).
+  // Touch → the on-screen look-pad drives yaw/pitch manually. Detect once.
+  const isTouch = useMemo(
+    () => typeof window !== "undefined" && !!window.matchMedia?.("(pointer: coarse)").matches,
+    [],
+  );
+  const keys = useRef<Record<string, boolean>>({});
+  const yaw = useRef(0);
+  const pitch = useRef(0);
+  const bobPhase = useRef(0);
+  const bobAmp = useRef(0);
+  const fwd = useRef(new Vector3());
+  const floorY = b.ffl_mm / 1000;
+  const gaps = useMemo(() => doorGaps(b), [b]);
+  const L = b.lengthM;
+  const W = b.widthM;
+  const thetaG = MathUtils.degToRad(-b.placement.rotationDeg);
+  const cos = Math.cos(thetaG);
+  const sin = Math.sin(thetaG);
+  const Xo = b.placement.xM;
+  const Zo = b.placement.zM;
+  const toWorld = (lx: number, lz: number): [number, number] => [
+    cos * lx + sin * lz + Xo,
+    -sin * lx + cos * lz + Zo,
+  ];
+  const toLocal = (wx: number, wz: number): [number, number] => {
+    const dx = wx - Xo;
+    const dz = wz - Zo;
+    return [cos * dx - sin * dz, sin * dx + cos * dz];
+  };
+
+  // Wider field of view for the walkthrough; restore the hero FOV on exit.
+  useEffect(() => {
+    const cam = camera as PerspectiveCamera;
+    const prevFov = cam.fov;
+    cam.fov = 78;
+    cam.updateProjectionMatrix();
+    return () => {
+      cam.fov = prevFov;
+      cam.updateProjectionMatrix();
+    };
+  }, [camera]);
+
+  // Spawn just outside the main door (or the south face), facing inward.
+  useEffect(() => {
+    const d = b.openings.find((o) => o.partId.includes("door"));
+    let start: [number, number];
+    let look: [number, number];
+    if (d) {
+      const bays = d.partId.includes("1600") ? 2 : 1;
+      const c = (d.startBay + bays / 2) * 1.2;
+      if (d.elevation === "south") { start = [c, -1.8]; look = [c, 2]; }
+      else if (d.elevation === "north") { start = [c, W + 1.8]; look = [c, W - 2]; }
+      else if (d.elevation === "west") { start = [-1.8, c]; look = [2, c]; }
+      else { start = [L + 1.8, c]; look = [L - 2, c]; }
+    } else {
+      start = [L / 2, -2.6];
+      look = [L / 2, W / 2];
+    }
+    const [wx, wz] = toWorld(start[0], start[1]);
+    const [lx, lz] = toWorld(look[0], look[1]);
+    camera.position.set(wx, floorY + EYE_H, wz);
+    camera.lookAt(lx, floorY + EYE_H, lz); // desktop: drei picks up from here
+    yaw.current = Math.atan2(-(lx - wx), -(lz - wz));
+    pitch.current = 0;
+  }, [b.id]);
+
+  // Keyboard (desktop)
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => { keys.current[e.code] = true; };
+    const up = (e: KeyboardEvent) => { keys.current[e.code] = false; };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, []);
+
+  // Zero any touch input when leaving walk mode.
+  useEffect(() => () => resetWalkInput(), []);
+
+  // DEV-only: expose the walk camera for manual verification (stripped in prod)
+  useEffect(() => {
+    if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
+      (window as unknown as { __cam?: unknown }).__cam = camera;
+    }
+  }, [camera]);
+
+  useFrame((_, dt) => {
+    const step = Math.min(dt, 0.05);
+
+    // --- look: TOUCH only (desktop mouse-look is owned by PointerLockControls) ---
+    if (isTouch) {
+      const LOOK = 0.0026;
+      yaw.current -= walkInput.look.dx * LOOK;
+      pitch.current -= walkInput.look.dy * LOOK;
+      walkInput.look.dx = 0;
+      walkInput.look.dy = 0;
+      pitch.current = Math.max(-1.2, Math.min(1.2, pitch.current));
+      camera.rotation.set(pitch.current, yaw.current, 0, "YXZ");
+    }
+
+    // --- movement: keyboard + joystick, blended and clamped ---
+    const k = keys.current;
+    let f = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0) + walkInput.move.f;
+    let s = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0) + walkInput.move.s;
+    f = Math.max(-1, Math.min(1, f));
+    s = Math.max(-1, Math.min(1, s));
+    const moving = Math.abs(f) > 0.06 || Math.abs(s) > 0.06;
+
+    if (moving) {
+      // forward from wherever the camera is actually looking (drei on desktop,
+      // manual yaw/pitch on touch), flattened to the floor plane
+      camera.getWorldDirection(fwd.current);
+      fwd.current.y = 0;
+      const flen = Math.hypot(fwd.current.x, fwd.current.z) || 1;
+      const fx = fwd.current.x / flen;
+      const fz = fwd.current.z / flen;
+      const rx = -fz; // right = forward × up
+      const rz = fx;
+      let dx = fx * f + rx * s;
+      let dz = fz * f + rz * s;
+      const len = Math.hypot(dx, dz) || 1;
+      const speed = (k.ShiftLeft || k.ShiftRight ? RUN_SPEED : WALK_SPEED) * step;
+      dx = (dx / len) * speed;
+      dz = (dz / len) * speed;
+
+      const oldWx = camera.position.x;
+      const oldWz = camera.position.z;
+      const [px, pz] = toLocal(oldWx, oldWz);
+      const wanted = toLocal(oldWx + dx, oldWz + dz);
+      let nx = wanted[0];
+      let nz = wanted[1];
+      // block crossing a solid wall span (keep PLAYER_R clearance); door gaps pass
+      const clamp = (
+        prevPerp: number, newPerp: number, wallC: number, tangent: number, wg: [number, number][],
+      ) => {
+        if (inGap(tangent, wg)) return newPerp;
+        const crossed = (prevPerp - wallC) * (newPerp - wallC) < 0;
+        if (crossed || Math.abs(newPerp - wallC) < PLAYER_R) {
+          return wallC + Math.sign(prevPerp - wallC || 1) * PLAYER_R;
+        }
+        return newPerp;
+      };
+      nx = clamp(px, nx, 0, nz, gaps.west);
+      nx = clamp(px, nx, L, nz, gaps.east);
+      nz = clamp(pz, nz, 0, nx, gaps.south);
+      nz = clamp(pz, nz, W, nx, gaps.north);
+      const [wx, wz] = toWorld(nx, nz);
+      camera.position.x = wx;
+      camera.position.z = wz;
+
+      // walking head-bob — advance ~one bob per 0.45 m actually travelled
+      const dist = Math.hypot(wx - oldWx, wz - oldWz);
+      bobPhase.current += (dist / 0.45) * Math.PI;
+      const targetAmp = k.ShiftLeft || k.ShiftRight ? 0.075 : 0.05;
+      bobAmp.current += (targetAmp - bobAmp.current) * Math.min(1, step * 8);
+    } else {
+      bobAmp.current += (0 - bobAmp.current) * Math.min(1, step * 8);
+    }
+    camera.position.y = floorY + EYE_H + Math.sin(bobPhase.current) * bobAmp.current;
+  });
+
+  // Desktop: drei owns mouse-look (click-to-lock). Touch: look-pad drives it.
+  return isTouch ? null : <PointerLockControls />;
+}
+
 export function ConfigStage() {
   const mode = useConfigurator((s) => s.mode);
   const buildings = useConfigurator((s) => s.buildings);
   const active = useConfigurator(activeBuilding);
+  const walkMode = useConfigurator((s) => s.walkMode);
 
   const shown = mode === "site" ? buildings : [active];
 
@@ -573,7 +857,7 @@ export function ConfigStage() {
       <CaptureRig view={view} />
       <directionalLight
         position={[view.cx + 18, 26, view.cz - 14]}
-        intensity={2.4}
+        intensity={3.1}
         color={0xfff2e0}
         castShadow
         shadow-mapSize={[2048, 2048]}
@@ -607,11 +891,15 @@ export function ConfigStage() {
 
       <GroundPlane cx={view.cx} cz={view.cz} />
 
-      <OrbitControls
-        target={[view.cx, 1.2, view.cz]}
-        maxPolarAngle={Math.PI / 2.05}
-        makeDefault
-      />
+      {walkMode ? (
+        <WalkControls b={active} />
+      ) : (
+        <OrbitControls
+          target={[view.cx, 1.2, view.cz]}
+          maxPolarAngle={Math.PI / 2.05}
+          makeDefault
+        />
+      )}
     </Canvas>
   );
 }

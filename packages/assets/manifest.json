@@ -38,7 +38,15 @@
       "skus": [
         "PANEL-EPS-FR-50-WALL"
       ],
-      "triBudget": 400
+      "triBudget": 400,
+      "displayName": "Wall panel (1200)",
+      "tags": [
+        "panel",
+        "wall",
+        "structural"
+      ],
+      "thumbnail2d": "parts/thumbs/panel-wall-1200.png",
+      "placementMode": "bay-grid"
     },
     {
       "id": "panel-wall-cut",
@@ -70,7 +78,16 @@
         "axis": "x",
         "minM": 0.05,
         "maxM": 1.2
-      }
+      },
+      "displayName": "Wall panel (cut)",
+      "tags": [
+        "panel",
+        "wall",
+        "cut",
+        "structural"
+      ],
+      "thumbnail2d": "parts/thumbs/panel-wall-cut.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "flashing-corner",
@@ -97,7 +114,15 @@
       "skus": [
         "PANEL-EPS-FR-50-WALL"
       ],
-      "triBudget": 150
+      "triBudget": 150,
+      "displayName": "Corner flashing",
+      "tags": [
+        "flashing",
+        "corner",
+        "structural"
+      ],
+      "thumbnail2d": "parts/thumbs/flashing-corner.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "flashing-basechannel",
@@ -125,7 +150,15 @@
       "skus": [
         "PANEL-EPS-FR-50-WALL"
       ],
-      "triBudget": 100
+      "triBudget": 100,
+      "displayName": "Base channel",
+      "tags": [
+        "flashing",
+        "basechannel",
+        "structural"
+      ],
+      "thumbnail2d": "parts/thumbs/flashing-basechannel.png",
+      "placementMode": "bay-grid"
     },
     {
       "id": "flashing-tee-join",
@@ -152,7 +185,16 @@
       "skus": [
         "TEE-JOIN-KIT"
       ],
-      "triBudget": 200
+      "triBudget": 200,
+      "displayName": "Tee-join flashing",
+      "tags": [
+        "flashing",
+        "tee",
+        "join",
+        "structural"
+      ],
+      "thumbnail2d": "parts/thumbs/flashing-tee-join.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "chassis-edge",
@@ -182,7 +224,15 @@
         "CHASSIS-TOILET-SINGLE",
         "CHASSIS-COMPLEX"
       ],
-      "triBudget": 200
+      "triBudget": 200,
+      "displayName": "Chassis edge",
+      "tags": [
+        "chassis",
+        "edge",
+        "structural"
+      ],
+      "thumbnail2d": "parts/thumbs/chassis-edge.png",
+      "placementMode": "bay-grid"
     },
     {
       "id": "footing-surefoot",
@@ -214,7 +264,15 @@
         "axis": "y",
         "minM": 0.1,
         "maxM": 1.5
-      }
+      },
+      "displayName": "Surefoot footing",
+      "tags": [
+        "footing",
+        "surefoot",
+        "structural"
+      ],
+      "thumbnail2d": "parts/thumbs/footing-surefoot.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "door-920-single",
@@ -242,7 +300,15 @@
         "DOOR-920-SC"
       ],
       "triBudget": 1200,
-      "replacesBays": 1
+      "replacesBays": 1,
+      "displayName": "Door 920 single",
+      "tags": [
+        "door",
+        "single",
+        "opening"
+      ],
+      "thumbnail2d": "parts/thumbs/door-920-single.png",
+      "placementMode": "wall-mounted"
     },
     {
       "id": "door-820-single",
@@ -270,7 +336,15 @@
         "DOOR-820-SC"
       ],
       "triBudget": 1200,
-      "replacesBays": 1
+      "replacesBays": 1,
+      "displayName": "Door 820 single",
+      "tags": [
+        "door",
+        "single",
+        "opening"
+      ],
+      "thumbnail2d": "parts/thumbs/door-820-single.png",
+      "placementMode": "wall-mounted"
     },
     {
       "id": "door-1600-double",
@@ -298,7 +372,15 @@
         "DOOR-1600-DOUBLE"
       ],
       "triBudget": 1800,
-      "replacesBays": 2
+      "replacesBays": 2,
+      "displayName": "Door 1600 double",
+      "tags": [
+        "door",
+        "double",
+        "opening"
+      ],
+      "thumbnail2d": "parts/thumbs/door-1600-double.png",
+      "placementMode": "wall-mounted"
     },
     {
       "id": "window-sliding-1175",
@@ -326,7 +408,15 @@
         "WINDOW-SLIDING-1175"
       ],
       "triBudget": 900,
-      "replacesBays": 1
+      "replacesBays": 1,
+      "displayName": "Sliding window 1175",
+      "tags": [
+        "window",
+        "sliding",
+        "opening"
+      ],
+      "thumbnail2d": "parts/thumbs/window-sliding-1175.png",
+      "placementMode": "wall-mounted"
     },
     {
       "id": "window-fixed-1175",
@@ -354,7 +444,16 @@
         "WINDOW-FIXED-1175"
       ],
       "triBudget": 700,
-      "replacesBays": 1
+      "replacesBays": 1,
+      "displayName": "Fixed window 1175",
+      "tags": [
+        "window",
+        "fi",
+        "ed",
+        "opening"
+      ],
+      "thumbnail2d": "parts/thumbs/window-fixed-1175.png",
+      "placementMode": "wall-mounted"
     },
     {
       "id": "window-toilet-600x300",
@@ -382,7 +481,15 @@
         "WINDOW-TOILET-600X300"
       ],
       "triBudget": 500,
-      "replacesBays": 1
+      "replacesBays": 1,
+      "displayName": "Toilet window 600×300",
+      "tags": [
+        "window",
+        "toilet",
+        "opening"
+      ],
+      "thumbnail2d": "parts/thumbs/window-toilet-600x300.png",
+      "placementMode": "wall-mounted"
     },
     {
       "id": "rapta-walkway-bay",
@@ -419,7 +526,55 @@
         "WALKWAY-BAY-STD",
         "WALKWAY-BAY-ELEV"
       ],
-      "triBudget": 2500
+      "triBudget": 2500,
+      "displayName": "Rapta walkway bay",
+      "tags": [
+        "rapta",
+        "walkway",
+        "bay",
+        "site"
+      ],
+      "thumbnail2d": "parts/thumbs/rapta-walkway-bay.png",
+      "placementMode": "bay-grid"
+    },
+    {
+      "id": "rapta-cover",
+      "file": "parts/rapta-cover.glb",
+      "placeholder": true,
+      "category": "sitekit",
+      "anchorFrame": "ground",
+      "dimensions": {
+        "x": 6.0,
+        "y": 2.6,
+        "z": 3.0
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "base",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "WALKWAY-BAY-STD"
+      ],
+      "triBudget": 4000,
+      "displayName": "RAPTA cover",
+      "tags": [
+        "rapta",
+        "cover",
+        "covered",
+        "walkway",
+        "shelter",
+        "canopy",
+        "site"
+      ],
+      "thumbnail2d": "parts/thumbs/rapta-cover.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "balustrade-1250",
@@ -447,7 +602,14 @@
       "skus": [
         "BALUSTRADE-1250"
       ],
-      "triBudget": 800
+      "triBudget": 800,
+      "displayName": "Balustrade 1250",
+      "tags": [
+        "balustrade",
+        "site"
+      ],
+      "thumbnail2d": "parts/thumbs/balustrade-1250.png",
+      "placementMode": "bay-grid"
     },
     {
       "id": "balustrade-3000",
@@ -475,7 +637,14 @@
       "skus": [
         "BALUSTRADE-3000"
       ],
-      "triBudget": 1200
+      "triBudget": 1200,
+      "displayName": "Balustrade 3000",
+      "tags": [
+        "balustrade",
+        "site"
+      ],
+      "thumbnail2d": "parts/thumbs/balustrade-3000.png",
+      "placementMode": "bay-grid"
     },
     {
       "id": "balustrade-post",
@@ -503,7 +672,15 @@
         "BALUSTRADE-1250",
         "BALUSTRADE-3000"
       ],
-      "triBudget": 200
+      "triBudget": 200,
+      "displayName": "Balustrade post",
+      "tags": [
+        "balustrade",
+        "post",
+        "site"
+      ],
+      "thumbnail2d": "parts/thumbs/balustrade-post.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "steps-single-width",
@@ -535,7 +712,16 @@
         "axis": "y",
         "minM": 0.3,
         "maxM": 1.5
-      }
+      },
+      "displayName": "Single-width steps",
+      "tags": [
+        "steps",
+        "single",
+        "width",
+        "site"
+      ],
+      "thumbnail2d": "parts/thumbs/steps-single-width.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "steps-double-width",
@@ -567,7 +753,16 @@
         "axis": "y",
         "minM": 0.3,
         "maxM": 1.5
-      }
+      },
+      "displayName": "Double-width steps",
+      "tags": [
+        "steps",
+        "double",
+        "width",
+        "site"
+      ],
+      "thumbnail2d": "parts/thumbs/steps-double-width.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "tank-5000",
@@ -594,7 +789,14 @@
       "skus": [
         "TANK-5000"
       ],
-      "triBudget": 1500
+      "triBudget": 1500,
+      "displayName": "Water tank 5000L",
+      "tags": [
+        "tank",
+        "site"
+      ],
+      "thumbnail2d": "parts/thumbs/tank-5000.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "waterskid-1000",
@@ -621,7 +823,14 @@
       "skus": [
         "WATERSKID-1000"
       ],
-      "triBudget": 2500
+      "triBudget": 2500,
+      "displayName": "Water skid 1000L",
+      "tags": [
+        "waterskid",
+        "site"
+      ],
+      "thumbnail2d": "parts/thumbs/waterskid-1000.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "wastetank-4000",
@@ -648,7 +857,14 @@
       "skus": [
         "WASTETANK-4000"
       ],
-      "triBudget": 1200
+      "triBudget": 1200,
+      "displayName": "Waste tank 4000L",
+      "tags": [
+        "wastetank",
+        "site"
+      ],
+      "thumbnail2d": "parts/thumbs/wastetank-4000.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "macerator-pump",
@@ -675,7 +891,15 @@
       "skus": [
         "MACERATOR-PUMP"
       ],
-      "triBudget": 1000
+      "triBudget": 1000,
+      "displayName": "Macerator pump",
+      "tags": [
+        "macerator",
+        "pump",
+        "site"
+      ],
+      "thumbnail2d": "parts/thumbs/macerator-pump.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "ac-condenser-bracket",
@@ -702,7 +926,16 @@
       "skus": [
         "AC-CONDENSER-BRACKET"
       ],
-      "triBudget": 1500
+      "triBudget": 1500,
+      "displayName": "AC condenser bracket",
+      "tags": [
+        "ac",
+        "condenser",
+        "bracket",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/ac-condenser-bracket.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "hws-electric",
@@ -729,7 +962,15 @@
       "skus": [
         "HWS-ELECTRIC"
       ],
-      "triBudget": 800
+      "triBudget": 800,
+      "displayName": "HWS (electric)",
+      "tags": [
+        "hws",
+        "electric",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/hws-electric.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "hws-gas",
@@ -756,7 +997,15 @@
       "skus": [
         "HWS-GAS"
       ],
-      "triBudget": 800
+      "triBudget": 800,
+      "displayName": "HWS (gas)",
+      "tags": [
+        "hws",
+        "gas",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/hws-gas.png",
+      "placementMode": "floor-free"
     },
     {
       "id": "roof-sheet-dualfall",
@@ -784,7 +1033,15 @@
       "skus": [
         "ROOF-MODULE"
       ],
-      "triBudget": 300
+      "triBudget": 300,
+      "displayName": "Roof sheet (dual-fall)",
+      "tags": [
+        "roof",
+        "sheet",
+        "dualfall"
+      ],
+      "thumbnail2d": "parts/thumbs/roof-sheet-dualfall.png",
+      "placementMode": "bay-grid"
     },
     {
       "id": "ridge-cap",
@@ -812,7 +1069,15 @@
       "skus": [
         "ROOF-MODULE"
       ],
-      "triBudget": 150
+      "triBudget": 150,
+      "displayName": "Ridge cap",
+      "tags": [
+        "ridge",
+        "cap",
+        "roof"
+      ],
+      "thumbnail2d": "parts/thumbs/ridge-cap.png",
+      "placementMode": "bay-grid"
     },
     {
       "id": "gutter-quad-end",
@@ -840,7 +1105,16 @@
       "skus": [
         "GUTTER-DOWNPIPE-SET"
       ],
-      "triBudget": 200
+      "triBudget": 200,
+      "displayName": "Quad gutter (end)",
+      "tags": [
+        "gutter",
+        "quad",
+        "end",
+        "roof"
+      ],
+      "thumbnail2d": "parts/thumbs/gutter-quad-end.png",
+      "placementMode": "bay-grid"
     },
     {
       "id": "fascia-capping-raked",
@@ -868,7 +1142,16 @@
       "skus": [
         "GUTTER-DOWNPIPE-SET"
       ],
-      "triBudget": 200
+      "triBudget": 200,
+      "displayName": "Raking fascia capping",
+      "tags": [
+        "fascia",
+        "capping",
+        "raked",
+        "roof"
+      ],
+      "thumbnail2d": "parts/thumbs/fascia-capping-raked.png",
+      "placementMode": "bay-grid"
     },
     {
       "id": "barge-capping-end",
@@ -896,7 +1179,16 @@
       "skus": [
         "ROOF-MODULE"
       ],
-      "triBudget": 150
+      "triBudget": 150,
+      "displayName": "Barge capping (end)",
+      "tags": [
+        "barge",
+        "capping",
+        "end",
+        "roof"
+      ],
+      "thumbnail2d": "parts/thumbs/barge-capping-end.png",
+      "placementMode": "bay-grid"
     },
     {
       "id": "cover-flashing-module-join",
@@ -924,7 +1216,17 @@
       "skus": [
         "TEE-JOIN-KIT"
       ],
-      "triBudget": 150
+      "triBudget": 150,
+      "displayName": "Module-join cover flashing",
+      "tags": [
+        "cover",
+        "flashing",
+        "module",
+        "join",
+        "roof"
+      ],
+      "thumbnail2d": "parts/thumbs/cover-flashing-module-join.png",
+      "placementMode": "bay-grid"
     },
     {
       "id": "downpipe-100x50",
@@ -956,7 +1258,590 @@
         "axis": "y",
         "minM": 2,
         "maxM": 4
-      }
+      },
+      "displayName": "Downpipe 100×50",
+      "tags": [
+        "downpipe",
+        "structural"
+      ],
+      "thumbnail2d": "parts/thumbs/downpipe-100x50.png",
+      "placementMode": "floor-free"
+    },
+    {
+      "id": "internal-wall-panel",
+      "file": "parts/internal-wall-panel.glb",
+      "placeholder": true,
+      "category": "structure",
+      "anchorFrame": "wall",
+      "displayName": "Internal wall",
+      "tags": [
+        "internal",
+        "wall",
+        "partition",
+        "structural"
+      ],
+      "thumbnail2d": "parts/thumbs/internal-wall-panel.png",
+      "placementMode": "partition",
+      "dimensions": {
+        "x": 1,
+        "y": 2.4,
+        "z": 0.05
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "INTERNAL-WALL-LM"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-gpo-double",
+      "file": "parts/fixture-gpo-double.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "Double GPO",
+      "tags": [
+        "gpo",
+        "power",
+        "electrical",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-gpo-double.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 0.1,
+        "y": 0.08,
+        "z": 0.05
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "GPO-DOUBLE"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-led-panel",
+      "file": "parts/fixture-led-panel.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "LED light panel",
+      "tags": [
+        "light",
+        "led",
+        "electrical",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-led-panel.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 0.6,
+        "y": 0.05,
+        "z": 0.6
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "LIGHT-LED-PANEL"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-data-point",
+      "file": "parts/fixture-data-point.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "Data point",
+      "tags": [
+        "data",
+        "electrical",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-data-point.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 0.1,
+        "y": 0.08,
+        "z": 0.05
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "DATA-POINT"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-ac-split-2.5",
+      "file": "parts/fixture-ac-split-2.5.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "AC split 2.5kW",
+      "tags": [
+        "ac",
+        "aircon",
+        "split",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-ac-split-2.5.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 0.8,
+        "y": 0.3,
+        "z": 0.2
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "AC-SPLIT-2.5"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-ac-split-3.5",
+      "file": "parts/fixture-ac-split-3.5.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "AC split 3.5kW",
+      "tags": [
+        "ac",
+        "aircon",
+        "split",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-ac-split-3.5.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 0.9,
+        "y": 0.3,
+        "z": 0.2
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "AC-SPLIT-3.5"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-ac-split-5.0",
+      "file": "parts/fixture-ac-split-5.0.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "AC split 5.0kW",
+      "tags": [
+        "ac",
+        "aircon",
+        "split",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-ac-split-5.0.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 1,
+        "y": 0.3,
+        "z": 0.2
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "AC-SPLIT-5.0"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-exhaust-fan",
+      "file": "parts/fixture-exhaust-fan.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "Exhaust fan",
+      "tags": [
+        "exhaust",
+        "fan",
+        "ventilation",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-exhaust-fan.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 0.25,
+        "y": 0.1,
+        "z": 0.25
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "EXHAUST-FAN"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-bath-pan",
+      "file": "parts/fixture-bath-pan.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "Toilet pan",
+      "tags": [
+        "toilet",
+        "pan",
+        "bathroom",
+        "wet",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-bath-pan.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.7,
+        "z": 0.6
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "BATH-PAN"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-bath-basin",
+      "file": "parts/fixture-bath-basin.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "Basin",
+      "tags": [
+        "basin",
+        "bathroom",
+        "wet",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-bath-basin.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 0.5,
+        "y": 0.85,
+        "z": 0.4
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "BATH-BASIN"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-bath-shower",
+      "file": "parts/fixture-bath-shower.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "Shower base",
+      "tags": [
+        "shower",
+        "bathroom",
+        "wet",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-bath-shower.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 0.9,
+        "y": 0.05,
+        "z": 0.9
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "BATH-SHOWER"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-bath-urinal",
+      "file": "parts/fixture-bath-urinal.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "Urinal",
+      "tags": [
+        "urinal",
+        "bathroom",
+        "wet",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-bath-urinal.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.6,
+        "z": 0.35
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "BATH-URINAL"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-kitchen-1500",
+      "file": "parts/fixture-kitchen-1500.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "Kitchenette 1500",
+      "tags": [
+        "kitchen",
+        "kitchenette",
+        "joinery",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-kitchen-1500.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 1.5,
+        "y": 0.9,
+        "z": 0.6
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "KITCHEN-1500"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-laundry-tub",
+      "file": "parts/fixture-laundry-tub.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "Laundry tub",
+      "tags": [
+        "laundry",
+        "tub",
+        "wet",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-laundry-tub.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 0.5,
+        "y": 0.9,
+        "z": 0.5
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "LAUNDRY-TUB"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-mirror-300",
+      "file": "parts/fixture-mirror-300.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "Mirror 300",
+      "tags": [
+        "mirror",
+        "bathroom",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-mirror-300.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.02
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "MIRROR-300"
+      ],
+      "triBudget": 300
+    },
+    {
+      "id": "fixture-bath-accessible",
+      "file": "parts/fixture-bath-accessible.glb",
+      "placeholder": true,
+      "category": "service",
+      "anchorFrame": "wall",
+      "displayName": "Accessible WC assembly",
+      "tags": [
+        "accessible",
+        "dda",
+        "bathroom",
+        "wet",
+        "service"
+      ],
+      "thumbnail2d": "parts/thumbs/fixture-bath-accessible.png",
+      "placementMode": "floor-free",
+      "dimensions": {
+        "x": 1.9,
+        "y": 0.85,
+        "z": 1.9
+      },
+      "tilingAxis": "none",
+      "anchors": [
+        {
+          "name": "origin",
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "skus": [
+        "BATH-ASSY-ACCESSIBLE"
+      ],
+      "triBudget": 400
     }
   ],
   "trimSpecs": {

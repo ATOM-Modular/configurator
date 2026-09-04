@@ -84,16 +84,15 @@ export function wallSeamMap(): Texture {
   const ctx = c.getContext("2d")!;
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, S, S);
-  // seam at the tile boundary (both edges → a solid line where panels meet)
+  // A single hairline shadow at the tile boundary where panels meet. Kept
+  // faint: real ATOM EPS panels sit near-flush, so the joint should read as a
+  // subtle line under grazing light, not a corrugated rib.
   const draw = (x: number) => {
-    ctx.fillStyle = "rgba(120,120,120,0.55)";
-    ctx.fillRect(x, 0, 2, S);
-    ctx.fillStyle = "rgba(170,170,170,0.35)";
-    ctx.fillRect(x - 1, 0, 1, S);
-    ctx.fillRect(x + 2, 0, 1, S);
+    ctx.fillStyle = "rgba(120,122,124,0.18)";
+    ctx.fillRect(x, 0, 1, S);
   };
   draw(0);
-  draw(S - 2);
+  draw(S - 1);
   const t = new CanvasTexture(c);
   t.colorSpace = SRGBColorSpace;
   t.wrapS = t.wrapT = RepeatWrapping;

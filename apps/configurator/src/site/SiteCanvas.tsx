@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { footprint, walkwayGeometry, WALKWAY_WIDTH_M } from "./geometry";
 import { siteKitDef } from "./siteKitCatalog";
 import { SNAP_M, useConfigurator } from "../state/store";
+import { PlanTitleblock, CONCEPT_STAMP } from "../studio/plan/PlanTitleblock";
 
 const PAD_M = 3;
 
@@ -53,6 +54,8 @@ export function SiteCanvas() {
 
   const endDrag = () => (drag.current = null);
 
+  const activeBuilding = s.buildings.find((b) => b.id === s.activeId);
+
   return (
     <div className="site-canvas-wrap">
       <svg
@@ -65,16 +68,12 @@ export function SiteCanvas() {
       >
         <defs>
           <pattern id="grid" width="1" height="1" patternUnits="userSpaceOnUse">
-            <path d="M 1 0 L 0 0 0 1" fill="none" stroke="#2c2f2f" strokeWidth="0.02" />
+            <path d="M 1 0 L 0 0 0 1" fill="none" stroke="#e5e5e5" strokeWidth="0.02" />
           </pattern>
         </defs>
-        <rect
-          x={bounds.x0}
-          y={bounds.z0}
-          width={viewW}
-          height={viewH}
-          fill="url(#grid)"
-        />
+        {/* white drawing sheet + faint site grid — matches the building GA look */}
+        <rect x={bounds.x0} y={bounds.z0} width={viewW} height={viewH} fill="#fff" />
+        <rect x={bounds.x0} y={bounds.z0} width={viewW} height={viewH} fill="url(#grid)" />
 
         {/* walkways (drawn under buildings) */}
         {s.walkways.map((w) => {
@@ -161,7 +160,7 @@ export function SiteCanvas() {
                 y={(f.z0 + f.z1) / 2}
                 className="plan-building-label"
               >
-                {b.name}
+                {b.name.toUpperCase()}
               </text>
               <text x={f.x0 + 0.15} y={f.z1 - 0.2} className="plan-ffl">
                 FFL {b.ffl_mm}
@@ -170,9 +169,11 @@ export function SiteCanvas() {
           );
         })}
       </svg>
+      <div className="dwg-stamp-overlay">{CONCEPT_STAMP}</div>
       <p className="muted">
         Grid 1m · snap {SNAP_M * 1000}mm · drag to move · double-click kit to remove
       </p>
+      <PlanTitleblock projectName={activeBuilding?.name ?? "Site"} scale="Site plan (concept)" />
     </div>
   );
 }

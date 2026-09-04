@@ -12,6 +12,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadCatalog } from "@atom/catalog";
 import { parseManifest } from "../src/manifest.js";
+import { parseGroups } from "../src/groups.js";
 
 const pkgRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const manifestPath = join(pkgRoot, "manifest.json");
@@ -47,6 +48,11 @@ for (const part of manifest.parts) {
   if (part.category === "roof" && part.anchorFrame !== "roof") {
     fail(`${part.id}: category "roof" must declare anchorFrame "roof" (got "${part.anchorFrame}")`);
   }
+  // Palette fields — a draggable catalogue item can't render or group without
+  // them (schema-enforced too; re-checked here for a friendly message).
+  if (!part.displayName) fail(`${part.id}: missing displayName (palette label)`);
+  if (!Array.isArray(part.tags)) fail(`${part.id}: missing tags[] (search/grouping)`);
+  if (!part.placementMode) fail(`${part.id}: missing placementMode`);
 }
 
 const byFrame: Record<string, number> = { wall: 0, roof: 0, ground: 0 };
@@ -54,11 +60,32 @@ for (const part of manifest.parts) byFrame[part.anchorFrame] = (byFrame[part.anc
 console.log(
   `  anchorFrame: ${byFrame.wall} wall · ${byFrame.roof} roof · ${byFrame.ground} ground`,
 );
+const byMode: Record<string, number> = {};
+for (const part of manifest.parts) byMode[part.placementMode] = (byMode[part.placementMode] ?? 0) + 1;
+console.log(
+  `  placementMode: ${Object.entries(byMode).map(([k, n]) => `${n} ${k}`).join(" · ")}`,
+);
 if (manifest.trimSpecs?.placeholder) {
   console.log("  trimSpecs present (placeholder — awaiting roof-trim-specs.json)");
 }
 
 console.log(`  ${placeholders}/${manifest.parts.length} parts are placeholders (authored GLBs pending)`);
+
+// --- Assembly groups: every partId resolves in the manifest, every sku in the catalog ---
+const partIds = new Set(manifest.parts.map((p) => p.id));
+const groups = parseGroups(JSON.parse(readFileSync(join(pkgRoot, "groups.json"), "utf-8")));
+for (const g of groups.groups) {
+  for (const gp of g.parts) {
+    if (!partIds.has(gp.partId)) fail(`group "${g.id}": partId "${gp.partId}" not in manifest`);
+    if (!catalog.skus[gp.sku]) fail(`group "${g.id}": SKU "${gp.sku}" does not resolve in catalog`);
+    const part = manifest.parts.find((p) => p.id === gp.partId);
+    if (part && !part.skus.includes(gp.sku)) {
+      fail(`group "${g.id}": SKU "${gp.sku}" is not one of part "${gp.partId}"'s skus`);
+    }
+  }
+}
+const ddaGroups = groups.groups.filter((g) => g.dda).length;
+console.log(`  groups: ${groups.groups.length} (${ddaGroups} DDA-gated), all partIds + SKUs resolve`);
 
 if (failures > 0) {
   console.error(`assets:check FAILED with ${failures} error(s)`);

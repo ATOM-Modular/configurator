@@ -57,7 +57,7 @@ function northBlock(): BuildingState {
       kitchen: null,
     },
     dda: false,
-    extraFitout: [
+    extras: [
       { sku: "EXHAUST-FAN", qty: 6 },
       { sku: "LAUNDRY-TUB", qty: 1 }, // "Standard Tub And Cabinet"
       { sku: "HWS-ELECTRIC-160L", qty: 1 }, // 2 across the pair
@@ -109,7 +109,7 @@ function southBlock(): BuildingState {
       kitchen: null,
     },
     dda: true,
-    extraFitout: [
+    extras: [
       { sku: "BATH-ACC-TOILET", qty: 1 },
       { sku: "BATH-ACC-BASIN", qty: 1 },
       { sku: "BATH-ACC-SHOWER", qty: 1 },

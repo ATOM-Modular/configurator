@@ -1,93 +1,483 @@
 {
   "version": "1.0.0-placeholder",
   "placeholder": true,
-  "note": "ALL RATES ARE PLACEHOLDERS. Real rates arrive as a Blaise export replacing this file — never hand-edit line rates here.",
+  "note": "MIXED: fit-out SKUs with placeholder=false carry real Blaise v10.2 Materials unit-price COSTS (engine derives sell = cost / (1 - GP)). SKUs with placeholder=true still use guessed rates (structural chassis/panels/roof, and fit-out items not yet mapped). Full replacement will arrive as a Blaise export.",
   "gstRate": 0.1,
   "grossProfitMargin": 0.45,
   "windRegionMultipliers": {
-    "AB": 1.0,
+    "AB": 1,
     "C": 1.15,
     "D": 1.3
   },
   "skus": {
-    "CHASSIS-OFFICE-SINGLE": { "label": "Chassis — single-module office", "unit": "module", "standardCost": 4500, "sellPrice": 6500, "placeholder": true },
-    "CHASSIS-TOILET-SINGLE": { "label": "Chassis — single-module toilet", "unit": "module", "standardCost": 5200, "sellPrice": 7500, "placeholder": true },
-    "CHASSIS-COMPLEX": { "label": "Chassis — complex (multi-module)", "unit": "module", "standardCost": 5000, "sellPrice": 7200, "placeholder": true },
-    "TEE-JOIN-KIT": { "label": "Tee-section joint kit", "unit": "join", "standardCost": 800, "sellPrice": 1200, "placeholder": true },
-
-    "PANEL-EPS-FR-50-WALL": { "label": "EPS-FR 50mm wall panel", "unit": "lm", "standardCost": 180, "sellPrice": 260, "placeholder": true },
-    "CEILING-PANEL-MODULE": { "label": "Ceiling panel set per module", "unit": "module", "standardCost": 1400, "sellPrice": 2000, "placeholder": true },
-    "ROOF-MODULE": { "label": "Skillion roof (Colorbond) per module", "unit": "module", "standardCost": 1100, "sellPrice": 1600, "placeholder": true },
-    "FLOOR-MODULE": { "label": "Flooring per module", "unit": "module", "standardCost": 1600, "sellPrice": 2300, "placeholder": true },
-    "POWER-MODULE": { "label": "Power/electrical base per module", "unit": "module", "standardCost": 1200, "sellPrice": 1800, "placeholder": true },
-    "GUTTER-DOWNPIPE-SET": { "label": "Gutters & downpipes per module", "unit": "module", "standardCost": 350, "sellPrice": 520, "placeholder": true },
-    "OTHERS": { "label": "Others (consumables, misc)", "unit": "building", "standardCost": 900, "sellPrice": 1300, "placeholder": true },
-
-    "DOOR-920-SC": { "label": "Door 920 single c/w closer", "unit": "ea", "standardCost": 650, "sellPrice": 950, "placeholder": true },
-    "DOOR-820-SC": { "label": "Door 820 single c/w closer", "unit": "ea", "standardCost": 620, "sellPrice": 900, "placeholder": true },
-    "DOOR-1600-DOUBLE": { "label": "Door 1600 double", "unit": "ea", "standardCost": 1100, "sellPrice": 1600, "placeholder": true },
-    "WINDOW-SLIDING-1175": { "label": "Window sliding 1175", "unit": "ea", "standardCost": 420, "sellPrice": 620, "placeholder": true },
-    "WINDOW-FIXED-1175": { "label": "Window fixed 1175", "unit": "ea", "standardCost": 380, "sellPrice": 560, "placeholder": true },
-    "WINDOW-TOILET-600X300": { "label": "Window toilet 600×300", "unit": "ea", "standardCost": 210, "sellPrice": 320, "placeholder": true },
-
-    "AC-SPLIT-2.5": { "label": "AC split system 2.5kW", "unit": "ea", "standardCost": 1250, "sellPrice": 1850, "placeholder": true },
-    "AC-SPLIT-3.5": { "label": "AC split system 3.5kW", "unit": "ea", "standardCost": 1500, "sellPrice": 2200, "placeholder": true },
-    "AC-SPLIT-5.0": { "label": "AC split system 5.0kW", "unit": "ea", "standardCost": 1900, "sellPrice": 2800, "placeholder": true },
-    "AC-SPLIT-7.1": { "label": "AC split system 7.1kW", "unit": "ea", "standardCost": 2400, "sellPrice": 3500, "placeholder": true },
-    "AC-CONDENSER-BRACKET": { "label": "AC condenser bracket", "unit": "ea", "standardCost": 140, "sellPrice": 210, "placeholder": true },
-
-    "BATH-PAN": { "label": "Toilet pan", "unit": "ea", "standardCost": 480, "sellPrice": 720, "placeholder": true },
-    "BATH-BASIN": { "label": "Basin", "unit": "ea", "standardCost": 350, "sellPrice": 520, "placeholder": true },
-    "BATH-SHOWER": { "label": "Shower", "unit": "ea", "standardCost": 900, "sellPrice": 1350, "placeholder": true },
-    "BATH-URINAL": { "label": "Urinal", "unit": "ea", "standardCost": 700, "sellPrice": 1050, "placeholder": true },
-    "BATH-PARTITION": { "label": "Toilet partition", "unit": "ea", "standardCost": 420, "sellPrice": 630, "placeholder": true },
-    "BATH-ASSY-MF-STD": { "label": "Bathroom assembly — M/F standard", "unit": "assembly", "standardCost": 5200, "sellPrice": 7800, "placeholder": true },
-    "BATH-ASSY-ACCESSIBLE": { "label": "Bathroom assembly — accessible (DDA)", "unit": "assembly", "standardCost": 6800, "sellPrice": 10200, "placeholder": true },
-
-    "KITCHEN-1500": { "label": "Kitchenette 1500", "unit": "ea", "standardCost": 2100, "sellPrice": 3100, "placeholder": true },
-    "KITCHEN-2100": { "label": "Kitchenette 2100", "unit": "ea", "standardCost": 2800, "sellPrice": 4100, "placeholder": true },
-    "KITCHEN-3600": { "label": "Kitchen 3600", "unit": "ea", "standardCost": 4300, "sellPrice": 6300, "placeholder": true },
-
-    "INTERNAL-WALL-LM": { "label": "Internal wall (per l.m.)", "unit": "lm", "standardCost": 150, "sellPrice": 220, "placeholder": true },
-
-    "GPO-DOUBLE": { "label": "Double GPO", "unit": "ea", "standardCost": 45, "sellPrice": 70, "placeholder": true },
-    "LIGHT-LED-PANEL": { "label": "LED light panel", "unit": "ea", "standardCost": 85, "sellPrice": 130, "placeholder": true },
-    "DATA-POINT": { "label": "Data point", "unit": "ea", "standardCost": 60, "sellPrice": 95, "placeholder": true },
-
-    "EXHAUST-FAN": { "label": "Exhaust fan", "unit": "ea", "standardCost": 110, "sellPrice": 170, "placeholder": true },
-    "LAUNDRY-TUB": { "label": "Standard tub and cabinet", "unit": "ea", "standardCost": 480, "sellPrice": 720, "placeholder": true },
-    "MIRROR-300": { "label": "Mirror 300×300", "unit": "ea", "standardCost": 55, "sellPrice": 85, "placeholder": true },
-    "TOWEL-DISPENSER": { "label": "Roll towel dispenser", "unit": "ea", "standardCost": 70, "sellPrice": 110, "placeholder": true },
-    "TOILET-ROLL-HOLDER": { "label": "Single toilet roll holder", "unit": "ea", "standardCost": 35, "sellPrice": 55, "placeholder": true },
-    "FLOOR-WASTE-100": { "label": "Square floor waste chrome 100mm", "unit": "ea", "standardCost": 60, "sellPrice": 95, "placeholder": true },
-    "TAP-POINT": { "label": "Tap point", "unit": "ea", "standardCost": 90, "sellPrice": 140, "placeholder": true },
-    "WATERPROOFING-M2": { "label": "Wet-area waterproofing", "unit": "m2", "standardCost": 55, "sellPrice": 85, "placeholder": true },
-
-    "BATH-ACC-TOILET": { "label": "Accessible toilet", "unit": "ea", "standardCost": 720, "sellPrice": 1080, "placeholder": true },
-    "BATH-ACC-BASIN": { "label": "Accessible basin (Caroma Urbane II)", "unit": "ea", "standardCost": 620, "sellPrice": 930, "placeholder": true },
-    "BATH-ACC-SHOWER": { "label": "Accessible shower set", "unit": "ea", "standardCost": 1150, "sellPrice": 1720, "placeholder": true },
-    "BATH-ACC-SHOWER-SEAT": { "label": "Accessible shower seat", "unit": "ea", "standardCost": 380, "sellPrice": 570, "placeholder": true },
-    "BATH-ACC-GRABRAIL": { "label": "Accessible toilet grabrail", "unit": "ea", "standardCost": 240, "sellPrice": 360, "placeholder": true },
-    "BATH-SHOWER-BASE-900": { "label": "Shower base 900×900", "unit": "ea", "standardCost": 420, "sellPrice": 630, "placeholder": true },
-
-    "RAMP-1500X2400": { "label": "Wheelchair ramp 1500×2400", "unit": "ea", "standardCost": 2100, "sellPrice": 3150, "placeholder": true },
-    "RAPTA-STEP-2200": { "label": "Rapta single steel step 2200mm", "unit": "ea", "standardCost": 1300, "sellPrice": 1950, "placeholder": true },
-    "WALKWAY-POST": { "label": "Walkway shelter post", "unit": "ea", "standardCost": 340, "sellPrice": 510, "placeholder": true },
-
-    "HWS-ELECTRIC-160L": { "label": "Hot water system — 160L electric", "unit": "ea", "standardCost": 1180, "sellPrice": 1750, "placeholder": true },
-    "HWS-ELECTRIC": { "label": "Hot water system — electric", "unit": "ea", "standardCost": 950, "sellPrice": 1400, "placeholder": true },
-    "HWS-GAS": { "label": "Hot water system — gas", "unit": "ea", "standardCost": 1600, "sellPrice": 2350, "placeholder": true },
-
-    "WALKWAY-BAY-STD": { "label": "Rapta covered walkway bay — standard", "unit": "bay", "standardCost": 1800, "sellPrice": 2700, "placeholder": true },
-    "WALKWAY-BAY-ELEV": { "label": "Rapta covered walkway bay — elevated", "unit": "bay", "standardCost": 2300, "sellPrice": 3400, "placeholder": true },
-    "BALUSTRADE-1250": { "label": "Balustrade 1250", "unit": "ea", "standardCost": 380, "sellPrice": 560, "placeholder": true },
-    "BALUSTRADE-3000": { "label": "Balustrade 3000", "unit": "ea", "standardCost": 760, "sellPrice": 1120, "placeholder": true },
-    "STEPS-SINGLE": { "label": "Steps — single width", "unit": "ea", "standardCost": 1200, "sellPrice": 1800, "placeholder": true },
-    "STEPS-DOUBLE": { "label": "Steps — double width", "unit": "ea", "standardCost": 1900, "sellPrice": 2800, "placeholder": true },
-    "TANK-5000": { "label": "Water tank 5000L", "unit": "ea", "standardCost": 2600, "sellPrice": 3800, "placeholder": true },
-    "WATERSKID-1000": { "label": "Water skid 1000L", "unit": "ea", "standardCost": 3400, "sellPrice": 5000, "placeholder": true },
-    "WASTETANK-4000": { "label": "Waste tank 4000L", "unit": "ea", "standardCost": 3100, "sellPrice": 4600, "placeholder": true },
-    "MACERATOR-PUMP": { "label": "Macerator pump", "unit": "ea", "standardCost": 1450, "sellPrice": 2150, "placeholder": true },
-    "FOOTING-SUREFOOT": { "label": "Surefoot footing block", "unit": "ea", "standardCost": 260, "sellPrice": 390, "placeholder": true }
+    "CHASSIS-OFFICE-SINGLE": {
+      "label": "Chassis — single-module office",
+      "unit": "module",
+      "standardCost": 4500,
+      "sellPrice": 6500,
+      "placeholder": true
+    },
+    "CHASSIS-TOILET-SINGLE": {
+      "label": "Chassis — single-module toilet",
+      "unit": "module",
+      "standardCost": 5200,
+      "sellPrice": 7500,
+      "placeholder": true
+    },
+    "CHASSIS-COMPLEX": {
+      "label": "Chassis — complex (multi-module)",
+      "unit": "module",
+      "standardCost": 5000,
+      "sellPrice": 7200,
+      "placeholder": true
+    },
+    "TEE-JOIN-KIT": {
+      "label": "Tee-section joint kit",
+      "unit": "join",
+      "standardCost": 800,
+      "sellPrice": 1200,
+      "placeholder": true
+    },
+    "PANEL-EPS-FR-50-WALL": {
+      "label": "EPS-FR 50mm wall panel",
+      "unit": "lm",
+      "standardCost": 180,
+      "sellPrice": 260,
+      "placeholder": true
+    },
+    "CEILING-PANEL-MODULE": {
+      "label": "Ceiling panel set per module",
+      "unit": "module",
+      "standardCost": 1400,
+      "sellPrice": 2000,
+      "placeholder": true
+    },
+    "ROOF-MODULE": {
+      "label": "Skillion roof (Colorbond) per module",
+      "unit": "module",
+      "standardCost": 1100,
+      "sellPrice": 1600,
+      "placeholder": true
+    },
+    "FLOOR-MODULE": {
+      "label": "Flooring per module",
+      "unit": "module",
+      "standardCost": 1600,
+      "sellPrice": 2300,
+      "placeholder": true
+    },
+    "POWER-MODULE": {
+      "label": "Power/electrical base per module",
+      "unit": "module",
+      "standardCost": 1200,
+      "sellPrice": 1800,
+      "placeholder": true
+    },
+    "GUTTER-DOWNPIPE-SET": {
+      "label": "Gutters & downpipes per module",
+      "unit": "module",
+      "standardCost": 350,
+      "sellPrice": 520,
+      "placeholder": true
+    },
+    "OTHERS": {
+      "label": "Others (consumables, misc)",
+      "unit": "building",
+      "standardCost": 900,
+      "sellPrice": 1300,
+      "placeholder": true
+    },
+    "DOOR-920-SC": {
+      "label": "Door 920 single c/w closer",
+      "unit": "ea",
+      "standardCost": 653.59,
+      "sellPrice": 1188.35,
+      "placeholder": false
+    },
+    "DOOR-820-SC": {
+      "label": "Door 820 single c/w closer",
+      "unit": "ea",
+      "standardCost": 667.48,
+      "sellPrice": 1213.6,
+      "placeholder": false
+    },
+    "DOOR-1600-DOUBLE": {
+      "label": "Door 1600 double",
+      "unit": "ea",
+      "standardCost": 1100,
+      "sellPrice": 1600,
+      "placeholder": true
+    },
+    "WINDOW-SLIDING-1175": {
+      "label": "Window sliding 1175",
+      "unit": "ea",
+      "standardCost": 420,
+      "sellPrice": 620,
+      "placeholder": true
+    },
+    "WINDOW-FIXED-1175": {
+      "label": "Window fixed 1175",
+      "unit": "ea",
+      "standardCost": 380,
+      "sellPrice": 560,
+      "placeholder": true
+    },
+    "WINDOW-TOILET-600X300": {
+      "label": "Window toilet 600×300",
+      "unit": "ea",
+      "standardCost": 210,
+      "sellPrice": 320,
+      "placeholder": true
+    },
+    "AC-SPLIT-2.5": {
+      "label": "AC split system 2.5kW",
+      "unit": "ea",
+      "standardCost": 1434.97,
+      "sellPrice": 2609.04,
+      "placeholder": false
+    },
+    "AC-SPLIT-3.5": {
+      "label": "AC split system 3.5kW",
+      "unit": "ea",
+      "standardCost": 1468.78,
+      "sellPrice": 2670.51,
+      "placeholder": false
+    },
+    "AC-SPLIT-5.0": {
+      "label": "AC split system 5.0kW",
+      "unit": "ea",
+      "standardCost": 1592.32,
+      "sellPrice": 2895.13,
+      "placeholder": false
+    },
+    "AC-SPLIT-7.1": {
+      "label": "AC split system 7.1kW",
+      "unit": "ea",
+      "standardCost": 2400,
+      "sellPrice": 3500,
+      "placeholder": true
+    },
+    "AC-CONDENSER-BRACKET": {
+      "label": "AC condenser bracket",
+      "unit": "ea",
+      "standardCost": 140,
+      "sellPrice": 210,
+      "placeholder": true
+    },
+    "BATH-PAN": {
+      "label": "Toilet pan",
+      "unit": "ea",
+      "standardCost": 181.91,
+      "sellPrice": 330.75,
+      "placeholder": false
+    },
+    "BATH-BASIN": {
+      "label": "Basin",
+      "unit": "ea",
+      "standardCost": 120.78,
+      "sellPrice": 219.6,
+      "placeholder": false
+    },
+    "BATH-SHOWER": {
+      "label": "Shower",
+      "unit": "ea",
+      "standardCost": 153.59,
+      "sellPrice": 279.25,
+      "placeholder": false
+    },
+    "BATH-URINAL": {
+      "label": "Urinal",
+      "unit": "ea",
+      "standardCost": 700,
+      "sellPrice": 1050,
+      "placeholder": true
+    },
+    "BATH-PARTITION": {
+      "label": "Toilet partition",
+      "unit": "ea",
+      "standardCost": 538.44,
+      "sellPrice": 978.98,
+      "placeholder": false
+    },
+    "BATH-ASSY-MF-STD": {
+      "label": "Bathroom assembly — M/F standard",
+      "unit": "assembly",
+      "standardCost": 5200,
+      "sellPrice": 7800,
+      "placeholder": true
+    },
+    "BATH-ASSY-ACCESSIBLE": {
+      "label": "Bathroom assembly — accessible (DDA)",
+      "unit": "assembly",
+      "standardCost": 6800,
+      "sellPrice": 10200,
+      "placeholder": true
+    },
+    "KITCHEN-1500": {
+      "label": "Kitchenette 1500",
+      "unit": "ea",
+      "standardCost": 1037.25,
+      "sellPrice": 1885.91,
+      "placeholder": false
+    },
+    "KITCHEN-2100": {
+      "label": "Kitchenette 2100",
+      "unit": "ea",
+      "standardCost": 2800,
+      "sellPrice": 4100,
+      "placeholder": true
+    },
+    "KITCHEN-3600": {
+      "label": "Kitchen 3600",
+      "unit": "ea",
+      "standardCost": 4300,
+      "sellPrice": 6300,
+      "placeholder": true
+    },
+    "INTERNAL-WALL-LM": {
+      "label": "Internal wall (per l.m.)",
+      "unit": "lm",
+      "standardCost": 150,
+      "sellPrice": 220,
+      "placeholder": true
+    },
+    "GPO-DOUBLE": {
+      "label": "Double GPO",
+      "unit": "ea",
+      "standardCost": 123.78,
+      "sellPrice": 225.05,
+      "placeholder": false
+    },
+    "LIGHT-LED-PANEL": {
+      "label": "LED light panel",
+      "unit": "ea",
+      "standardCost": 138.8,
+      "sellPrice": 252.36,
+      "placeholder": false
+    },
+    "DATA-POINT": {
+      "label": "Data point",
+      "unit": "ea",
+      "standardCost": 154.76,
+      "sellPrice": 281.38,
+      "placeholder": false
+    },
+    "EXHAUST-FAN": {
+      "label": "Exhaust fan",
+      "unit": "ea",
+      "standardCost": 103.64,
+      "sellPrice": 188.44,
+      "placeholder": false
+    },
+    "LAUNDRY-TUB": {
+      "label": "Standard tub and cabinet",
+      "unit": "ea",
+      "standardCost": 539.06,
+      "sellPrice": 980.11,
+      "placeholder": false
+    },
+    "MIRROR-300": {
+      "label": "Mirror 300×300",
+      "unit": "ea",
+      "standardCost": 2.52,
+      "sellPrice": 4.58,
+      "placeholder": false
+    },
+    "TOWEL-DISPENSER": {
+      "label": "Roll towel dispenser",
+      "unit": "ea",
+      "standardCost": 57.85,
+      "sellPrice": 105.18,
+      "placeholder": false
+    },
+    "TOILET-ROLL-HOLDER": {
+      "label": "Single toilet roll holder",
+      "unit": "ea",
+      "standardCost": 39.69,
+      "sellPrice": 72.16,
+      "placeholder": false
+    },
+    "FLOOR-WASTE-100": {
+      "label": "Square floor waste chrome 100mm",
+      "unit": "ea",
+      "standardCost": 60,
+      "sellPrice": 95,
+      "placeholder": true
+    },
+    "TAP-POINT": {
+      "label": "Tap point",
+      "unit": "ea",
+      "standardCost": 90,
+      "sellPrice": 140,
+      "placeholder": true
+    },
+    "WATERPROOFING-M2": {
+      "label": "Wet-area waterproofing",
+      "unit": "m2",
+      "standardCost": 55,
+      "sellPrice": 85,
+      "placeholder": true
+    },
+    "BATH-ACC-TOILET": {
+      "label": "Accessible toilet",
+      "unit": "ea",
+      "standardCost": 720,
+      "sellPrice": 1080,
+      "placeholder": true
+    },
+    "BATH-ACC-BASIN": {
+      "label": "Accessible basin (Caroma Urbane II)",
+      "unit": "ea",
+      "standardCost": 620,
+      "sellPrice": 930,
+      "placeholder": true
+    },
+    "BATH-ACC-SHOWER": {
+      "label": "Accessible shower set",
+      "unit": "ea",
+      "standardCost": 1150,
+      "sellPrice": 1720,
+      "placeholder": true
+    },
+    "BATH-ACC-SHOWER-SEAT": {
+      "label": "Accessible shower seat",
+      "unit": "ea",
+      "standardCost": 380,
+      "sellPrice": 570,
+      "placeholder": true
+    },
+    "BATH-ACC-GRABRAIL": {
+      "label": "Accessible toilet grabrail",
+      "unit": "ea",
+      "standardCost": 240,
+      "sellPrice": 360,
+      "placeholder": true
+    },
+    "BATH-SHOWER-BASE-900": {
+      "label": "Shower base 900×900",
+      "unit": "ea",
+      "standardCost": 420,
+      "sellPrice": 630,
+      "placeholder": true
+    },
+    "RAMP-1500X2400": {
+      "label": "Wheelchair ramp 1500×2400",
+      "unit": "ea",
+      "standardCost": 2100,
+      "sellPrice": 3150,
+      "placeholder": true
+    },
+    "RAPTA-STEP-2200": {
+      "label": "Rapta single steel step 2200mm",
+      "unit": "ea",
+      "standardCost": 1300,
+      "sellPrice": 1950,
+      "placeholder": true
+    },
+    "WALKWAY-POST": {
+      "label": "Walkway shelter post",
+      "unit": "ea",
+      "standardCost": 340,
+      "sellPrice": 510,
+      "placeholder": true
+    },
+    "HWS-ELECTRIC-160L": {
+      "label": "Hot water system — 160L electric",
+      "unit": "ea",
+      "standardCost": 1055.79,
+      "sellPrice": 1919.62,
+      "placeholder": false
+    },
+    "HWS-ELECTRIC": {
+      "label": "Hot water system — electric",
+      "unit": "ea",
+      "standardCost": 950,
+      "sellPrice": 1400,
+      "placeholder": true
+    },
+    "HWS-GAS": {
+      "label": "Hot water system — gas",
+      "unit": "ea",
+      "standardCost": 1600,
+      "sellPrice": 2350,
+      "placeholder": true
+    },
+    "WALKWAY-BAY-STD": {
+      "label": "Rapta covered walkway bay — standard",
+      "unit": "bay",
+      "standardCost": 1800,
+      "sellPrice": 2700,
+      "placeholder": true
+    },
+    "WALKWAY-BAY-ELEV": {
+      "label": "Rapta covered walkway bay — elevated",
+      "unit": "bay",
+      "standardCost": 2300,
+      "sellPrice": 3400,
+      "placeholder": true
+    },
+    "BALUSTRADE-1250": {
+      "label": "Balustrade 1250",
+      "unit": "ea",
+      "standardCost": 380,
+      "sellPrice": 560,
+      "placeholder": true
+    },
+    "BALUSTRADE-3000": {
+      "label": "Balustrade 3000",
+      "unit": "ea",
+      "standardCost": 760,
+      "sellPrice": 1120,
+      "placeholder": true
+    },
+    "STEPS-SINGLE": {
+      "label": "Steps — single width",
+      "unit": "ea",
+      "standardCost": 1200,
+      "sellPrice": 1800,
+      "placeholder": true
+    },
+    "STEPS-DOUBLE": {
+      "label": "Steps — double width",
+      "unit": "ea",
+      "standardCost": 1900,
+      "sellPrice": 2800,
+      "placeholder": true
+    },
+    "TANK-5000": {
+      "label": "Water tank 5000L",
+      "unit": "ea",
+      "standardCost": 2600,
+      "sellPrice": 3800,
+      "placeholder": true
+    },
+    "WATERSKID-1000": {
+      "label": "Water skid 1000L",
+      "unit": "ea",
+      "standardCost": 3400,
+      "sellPrice": 5000,
+      "placeholder": true
+    },
+    "WASTETANK-4000": {
+      "label": "Waste tank 4000L",
+      "unit": "ea",
+      "standardCost": 3100,
+      "sellPrice": 4600,
+      "placeholder": true
+    },
+    "MACERATOR-PUMP": {
+      "label": "Macerator pump",
+      "unit": "ea",
+      "standardCost": 1450,
+      "sellPrice": 2150,
+      "placeholder": true
+    },
+    "FOOTING-SUREFOOT": {
+      "label": "Surefoot footing block",
+      "unit": "ea",
+      "standardCost": 260,
+      "sellPrice": 390,
+      "placeholder": true
+    }
   }
 }

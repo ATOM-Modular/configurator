@@ -154,17 +154,26 @@ export function assembleBuilding(
         meta: { elevation: name, ...(p.bay !== undefined ? { bay: p.bay } : {}) },
       });
     }
-    // Base channel + chassis edge tile the same run (full sections; the
-    // placeholder renderer tolerates the trailing overlap).
+    // Base channel + chassis edge tile the same run. The LAST tile is scaled
+    // to the remainder so the run ends exactly at the wall line — no trailing
+    // section poking past the corner (was Math.ceil full tiles → overhang).
     const stepBase = getPart(manifest, "flashing-basechannel").tileStepM ?? 1.2;
-    for (let i = 0; i < Math.ceil(frame.runM / stepBase - 1e-9); i++) {
+    const chassisH = getPart(manifest, "chassis-edge").dimensions.y;
+    const nFull = Math.floor(frame.runM / stepBase + 1e-9);
+    const rem = frame.runM - nFull * stepBase;
+    const tiles = rem > 1e-3 ? nFull + 1 : nFull;
+    for (let i = 0; i < tiles; i++) {
+      const partial = i === nFull;
+      const sc: [number, number, number] | undefined = partial
+        ? [rem / stepBase, 1, 1]
+        : undefined;
       const x: [number, number, number] = [
         frame.origin[0] + frame.dir[0] * i * stepBase,
         0,
         frame.origin[2] + frame.dir[2] * i * stepBase,
       ];
-      placeIn("wall", "flashing-basechannel", x, frame.rot);
-      placeIn("wall", "chassis-edge", [x[0], -getPart(manifest, "chassis-edge").dimensions.y, x[2]], frame.rot);
+      placeIn("wall", "flashing-basechannel", x, frame.rot, sc);
+      placeIn("wall", "chassis-edge", [x[0], -chassisH, x[2]], frame.rot, sc);
     }
   }
 

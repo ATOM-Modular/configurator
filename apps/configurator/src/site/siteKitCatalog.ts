@@ -8,6 +8,7 @@ export interface SiteKitDef {
 }
 
 export const SITE_KIT_CATALOG: SiteKitDef[] = [
+  { sku: "WALKWAY-BAY-STD", partId: "rapta-cover", label: "RAPTA cover 6×3", sizeM: [6.0, 3.0] },
   { sku: "STEPS-SINGLE", partId: "steps-single-width", label: "Steps (single)", sizeM: [1.0, 1.6] },
   { sku: "STEPS-DOUBLE", partId: "steps-double-width", label: "Steps (double)", sizeM: [2.0, 1.6] },
   { sku: "BALUSTRADE-1250", partId: "balustrade-1250", label: "Balustrade 1250", sizeM: [1.25, 0.1] },

@@ -235,17 +235,18 @@ button.primary:disabled { opacity: 0.4; cursor: default; }
   border: 1px solid var(--accent); border-radius: 8px;
   padding: 8px;
 }
-.site-canvas-wrap { display: flex; flex-direction: column; gap: 4px; }
-.site-canvas { width: 100%; height: auto; touch-action: none; background: var(--grey-900); border-radius: 4px; }
-.plan-building { fill: #3a3a2e; stroke: var(--accent); stroke-width: 0.06; cursor: grab; }
-.plan-building.hover { fill: #46463a; }
-.plan-building.selected { fill: #57523c; stroke-width: 0.12; }
-.plan-building.linking { stroke: var(--status-warn); stroke-dasharray: 0.3 0.2; }
-.plan-building-label { fill: var(--text); font-size: 0.5px; text-anchor: middle; pointer-events: none; }
-.plan-ffl { fill: var(--text-muted); font-size: 0.32px; pointer-events: none; }
-.plan-walkway { fill: rgba(219, 205, 172, 0.22); stroke: var(--grey-300); stroke-width: 0.04; cursor: pointer; }
-.plan-walkway.elevated { fill: rgba(212, 160, 23, 0.28); stroke: var(--status-warn); }
-.plan-kit { fill: #4a5a4a; stroke: #8fa88f; stroke-width: 0.04; cursor: grab; }
+/* Site plan — same monochrome GA drawing language as the building plan */
+.site-canvas-wrap { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.site-canvas { width: 100%; height: auto; touch-action: none; background: #fff; border: 1px solid #111; border-radius: 2px; }
+.plan-building { fill: #fff; stroke: #111; stroke-width: 0.06; cursor: grab; }
+.plan-building.hover { fill: #f4f4f2; }
+.plan-building.selected { stroke: var(--accent); stroke-width: 0.12; }
+.plan-building.linking { stroke: var(--accent); stroke-dasharray: 0.3 0.2; }
+.plan-building-label { fill: #111; font-size: 0.5px; font-weight: 500; letter-spacing: 0.01px; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+.plan-ffl { fill: #555; font-size: 0.32px; pointer-events: none; }
+.plan-walkway { fill: none; stroke: #111; stroke-width: 0.03; stroke-dasharray: 0.25 0.15; cursor: pointer; }
+.plan-walkway.elevated { stroke: var(--accent); }
+.plan-kit { fill: #fff; stroke: #111; stroke-width: 0.03; cursor: grab; }
 
 .site-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .site-actions button {
@@ -297,10 +298,7 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
 .delta.down { background: rgba(63, 168, 119, 0.18); color: var(--status-good); }
 .chip { background: rgba(224, 160, 32, 0.14); color: var(--status-warn); border-color: var(--status-warn); }
 .internal-metrics { border-top-color: var(--status-warn); }
-.plan-building { fill: var(--grey-700); stroke: var(--atom-red); }
-.plan-building.selected { fill: var(--grey-600); }
-.plan-walkway { fill: rgba(186, 12, 47, 0.14); stroke: var(--grey-400); }
-.plan-walkway.elevated { fill: rgba(224, 160, 32, 0.2); stroke: var(--status-warn); }
+/* (site-plan building/walkway styling now lives with the monochrome GA rules) */
 .footprint rect { fill: var(--grey-800); stroke: var(--atom-red); }
 .plan-shell { fill: var(--grey-800); stroke: var(--atom-red); }
 
@@ -344,6 +342,38 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
 .studio-stage { position: relative; min-width: 0; background: var(--bg); }
 .studio-stage canvas { display: block; }
 
+/* walk-mode toggle in the 3D header */
+.studio-walk {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--surface-raised); border: 1px solid var(--border); color: var(--text-muted);
+  padding: 5px 12px; font-size: 12px; border-radius: 6px; cursor: pointer;
+}
+.studio-walk:hover { border-color: var(--accent); color: var(--text); }
+.studio-walk.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700; }
+
+/* first-person on-screen hint */
+.walk-hint {
+  position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 6px; pointer-events: none; z-index: 5;
+  background: rgba(18, 21, 21, 0.82); color: #fff; border: 1px solid rgba(219, 205, 172, 0.4);
+  padding: 8px 14px; border-radius: 8px; font-size: 12px; white-space: nowrap;
+}
+.walk-hint strong { color: var(--brand-tan, #dbcdac); }
+
+/* on-screen touch controls (tablets) */
+.walk-lookpad { position: absolute; inset: 0; z-index: 3; touch-action: none; }
+.walk-joy {
+  position: absolute; left: 24px; bottom: 24px; width: 128px; height: 128px;
+  z-index: 4; border-radius: 50%; touch-action: none;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(18, 21, 21, 0.32); border: 1.5px solid rgba(219, 205, 172, 0.55);
+}
+.walk-joy-knob {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: rgba(219, 205, 172, 0.9); border: 1px solid rgba(18, 21, 21, 0.3);
+  pointer-events: none;
+}
+
 .studio-catalogue { border-right: 1px solid var(--border); overflow-y: auto; padding: 12px; }
 .studio-catalogue h2 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
 .cat-group { margin-top: 12px; }
@@ -357,6 +387,73 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
 .cat-card:hover { border-color: var(--accent); }
 .cat-card:active { cursor: grabbing; }
 .cat-card .ti { color: var(--accent); font-size: 15px; }
+
+/* ---------- manifest palette (Floorplanner-style tiles) ---------- */
+.palette { margin-top: 4px; }
+.palette-tabs { display: flex; gap: 2px; margin-bottom: 8px; }
+.palette-tabs button {
+  flex: 1; padding: 5px; font-size: 12px; background: var(--surface-raised);
+  border: 1px solid var(--border); color: var(--text-muted); cursor: pointer;
+}
+.palette-tabs button:first-child { border-radius: 6px 0 0 6px; }
+.palette-tabs button:last-child { border-radius: 0 6px 6px 0; }
+.palette-tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.palette-groups { display: flex; flex-direction: column; gap: 6px; }
+.palette-group-tile {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; font: inherit;
+  background: var(--surface-raised); border: 1px solid var(--border); color: var(--text);
+  border-radius: 8px; padding: 9px 10px; font-size: 12px; cursor: pointer;
+}
+.palette-group-tile:hover { border-color: var(--accent); }
+.palette-group-tile.armed { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+.palette-group-tile .ti { color: var(--accent); font-size: 16px; }
+.palette-group-name { font-weight: 600; }
+.palette-group-meta { margin-left: auto; font-size: 10.5px; color: var(--text-muted); }
+.palette-tiles {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
+}
+.palette-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  background: var(--surface-raised); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 6px; cursor: pointer; color: var(--text); font: inherit;
+}
+.palette-tile.placeable:hover { border-color: var(--accent); }
+.palette-tile:disabled { opacity: 0.5; cursor: default; }
+/* armed for click-to-place — clearly selected */
+.palette-tile.armed { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+.palette-thumb {
+  width: 100%; height: 44px; display: flex; align-items: center; justify-content: center;
+}
+/* distinct opening glyph (door swing vs window) */
+.palette-thumb .tile-glyph { width: 40px; height: 40px; }
+.palette-thumb .tile-glyph line, .palette-thumb .tile-glyph path {
+  stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round;
+}
+/* fixture plan symbols reused as thumbnails — constant 1.4px accent stroke */
+.palette-thumb .tile-plan line, .palette-thumb .tile-plan rect,
+.palette-thumb .tile-plan path, .palette-thumb .tile-plan circle,
+.palette-thumb .tile-plan ellipse {
+  stroke: var(--accent); stroke-width: 1.4px; fill: none; vector-effect: non-scaling-stroke;
+}
+.palette-thumb .tile-plan .dwg-symtxt { display: none; }
+/* placeholder → wireframe affordance (dashed, tan hatch); real art swaps in */
+.palette-thumb .wire {
+  border: 1.5px dashed var(--accent); border-radius: 3px;
+  background: repeating-linear-gradient(
+    45deg, transparent, transparent 3px,
+    color-mix(in srgb, var(--accent) 22%, transparent) 3px,
+    color-mix(in srgb, var(--accent) 22%, transparent) 4px
+  );
+}
+.palette-thumb .solid {
+  border: 1.5px solid var(--accent); border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.palette-label {
+  font-size: 10.5px; line-height: 1.2; color: var(--text); text-align: center;
+  overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
 
 .site-drop { width: 100%; height: 100%; display: flex; flex-direction: column; }
 .site-drop .site-canvas { flex: 1; }
@@ -381,7 +478,7 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
 }
 
 /* ---------- Floorplanner-style 2D editor ---------- */
-.fp-editor { padding: 12px; display: flex; flex-direction: column; gap: 10px; height: 100%; overflow-y: auto; }
+.fp-editor { position: relative; padding: 12px; display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; overflow: hidden; }
 .fp-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .fp-toolbar button {
   display: flex; align-items: center; gap: 5px;
@@ -390,9 +487,13 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
 }
 .fp-toolbar button.active { border-color: var(--accent); color: var(--accent); }
 .fp-toolbar button.danger { color: var(--status-bad); border-color: var(--status-bad); }
+.fp-toolbar button.fp-autospec { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+.fp-toolbar button.fp-autospec:hover { filter: brightness(1.08); }
 .fp-hint { font-size: 12px; color: var(--text-muted); }
 .fp-selctl { display: flex; gap: 4px; margin-left: auto; }
-.fp-svg { width: 100%; max-width: 420px; background: var(--grey-900); border-radius: 6px; }
+.fp-svg { flex: 1 1 0; min-height: 0; width: 100%; background: #fff; border: 1px solid #111; border-radius: 2px; }
+.fp-svg.arming { cursor: copy; outline: 2px solid var(--accent); outline-offset: 2px; }
+.site-drop { cursor: default; }
 .fp-shell { fill: none; stroke: var(--accent); stroke-width: 0.07; }
 .fp-wall { stroke: var(--text); stroke-width: 0.09; stroke-linecap: round; cursor: pointer; }
 .fp-wall.sel { stroke: var(--accent); stroke-width: 0.13; }
@@ -403,7 +504,21 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
 .fp-item-dot { fill: var(--surface-raised); stroke: var(--accent); stroke-width: 0.04; }
 .fp-item-dot.sel { fill: var(--accent); }
 .fp-item-label { fill: var(--text-muted); font-size: 0.2px; text-anchor: middle; pointer-events: none; }
-.fp-footer { display: flex; gap: 18px; font-size: 12px; color: var(--text-muted); }
+/* faint footprint rect so overlapping fixtures read */
+.fp-item-foot { fill: color-mix(in srgb, var(--accent) 12%, transparent); stroke: color-mix(in srgb, var(--accent) 45%, transparent); stroke-width: 0.02; pointer-events: none; }
+/* fixture dropped outside any room → amber */
+.fp-item.unassigned .fp-item-dot { stroke: var(--amber, #D4A017); }
+.fp-item.unassigned .fp-item-foot { fill: color-mix(in srgb, #D4A017 16%, transparent); stroke: color-mix(in srgb, #D4A017 55%, transparent); }
+/* nearest-bay highlight while dragging a wall-mounted opening */
+.fp-bayhint { fill: color-mix(in srgb, var(--accent) 60%, transparent); pointer-events: none; }
+.fp-footer { display: flex; gap: 18px; font-size: 12px; color: var(--text-muted); align-items: center; }
+.fp-chip { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; font-size: 11px; }
+.fp-chip.warn { background: color-mix(in srgb, #D4A017 22%, transparent); color: #8a6d0f; }
+.fp-toast {
+  position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%);
+  background: var(--brand-dark, #121515); color: #fff; padding: 7px 14px;
+  border-radius: 8px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); z-index: 5;
+}
 
 /* ---------- catalogue search + opening markers ---------- */
 .cat-search {
@@ -427,19 +542,98 @@ button.primary:hover:not(:disabled) { background: var(--atom-red-bright); }
 .fp-rot-stem { stroke: var(--accent); stroke-width: 0.03; }
 .fp-rot-handle { fill: var(--accent); stroke: var(--bg); stroke-width: 0.02; cursor: grab; }
 
+/* ================= DRAWING MODE (ATOM GA plan look) ================= */
+/* Monochrome black-on-white; fixed line-weight hierarchy:
+   heavy = cut walls, medium = fixtures/doors, thin = dims/hatch/leaders. */
+.fp-svg text { font-family: "Helvetica Neue", Arial, sans-serif; }
+.dwg-bg { fill: #fff; }
+.dwg-wet { fill: url(#dwg-hatch); stroke: none; pointer-events: none; }
+.dwg-hatchline { stroke: #111; stroke-width: 0.01; fill: none; }
+/* poché walls — heavy. Note the selector must match the poché rects/lines
+   themselves (rect.dwg-wall, line.dwg-wall) AND those nested in a .dwg-wall
+   group — otherwise a bare <rect class="dwg-wall"> defaults to a BLACK fill and
+   paints the whole footprint solid. */
+.dwg-wall, .dwg-wall line, .dwg-wall rect, rect.dwg-wall, line.dwg-wall {
+  stroke: #111; stroke-width: 0.04; fill: none;
+}
+.dwg-wall.sel line, line.dwg-wall.sel { stroke: var(--accent); }
+/* doors / windows — medium; the break is a white cut over the wall */
+.dwg-door line, .dwg-door path { stroke: #111; stroke-width: 0.018; fill: none; }
+/* door leaf drawn as a solid slab panel (ATOM GA convention), heavier than
+   the thin swing arc; white fill so it reads crisply over the arc */
+.dwg-door .dwg-leaf { fill: #fff; stroke: #111; stroke-width: 0.03; }
+.dwg-window line { stroke: #111; stroke-width: 0.022; fill: none; }
+.dwg-break { fill: #fff; stroke: none; }
+.dwg-sel .dwg-door line, .dwg-sel .dwg-door path, .dwg-sel .dwg-door .dwg-leaf, .dwg-sel .dwg-window line { stroke: var(--accent); }
+/* fixtures — medium plan-symbol linework (metre units so it scales with the
+   sheet; NOT non-scaling, which collapsed the width to ~0 device px) */
+.dwg-sym line, .dwg-sym rect, .dwg-sym path, .dwg-sym circle, .dwg-sym ellipse {
+  stroke: #111; stroke-width: 0.022; fill: none;
+}
+.dwg-symtxt { fill: #111; font-size: 0.14px; text-anchor: middle; }
+.fp-item.unassigned .dwg-sym line, .fp-item.unassigned .dwg-sym rect,
+.fp-item.unassigned .dwg-sym path, .fp-item.unassigned .dwg-sym circle,
+.fp-item.unassigned .dwg-sym ellipse { stroke: #D4A017; }
+.dwg-selbox { fill: none; stroke: var(--accent); stroke-width: 0.025; stroke-dasharray: 0.08 0.06; }
+.dwg-rot-handle { fill: #fff; stroke: var(--accent); stroke-width: 0.025; cursor: grab; }
+/* thin linework — dims, leaders, jambs, extension lines */
+.dwg-thin { stroke: #111; stroke-width: 0.01; fill: none; }
+.dwg-dim line { stroke: #111; stroke-width: 0.01; }
+.dwg-dimtxt { fill: #111; font-size: 0.19px; text-anchor: middle; pointer-events: none; }
+.dwg-dimtxt.thk { font-size: 0.15px; fill: #444; }
+.dwg-label {
+  fill: #111; font-size: 0.3px; text-anchor: middle; dominant-baseline: middle;
+  letter-spacing: 0.01px; pointer-events: none; font-weight: 500;
+}
+.dwg-hit { fill: transparent; stroke: transparent; stroke-width: 0.1; cursor: grab; }
+
+/* CONCEPT status stamp — required on every drawing-mode view + export */
+.dwg-stamp-overlay {
+  position: absolute; top: 54px; right: 16px; z-index: 6; pointer-events: none;
+  border: 2px solid #C0392B; color: #C0392B; background: rgba(255,255,255,0.82);
+  font-weight: 800; font-size: 11px; letter-spacing: 0.04em; padding: 3px 9px;
+  transform: rotate(-4deg); border-radius: 2px;
+}
+
+/* Titleblock strip along the bottom (GA sheet layout) */
+.dwg-titleblock {
+  display: flex; align-items: stretch; margin-top: 8px;
+  border: 1px solid #111; background: #fff; color: #111; font-size: 10px; max-width: 680px;
+}
+.dwg-tb-logo {
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 6px 12px; border-right: 1px solid #111; min-width: 96px;
+}
+.dwg-tb-atom { color: #C0392B; font-weight: 900; font-size: 20px; letter-spacing: 0.06em; line-height: 1; }
+.dwg-tb-modular { color: #111; font-weight: 600; font-size: 8px; letter-spacing: 0.34em; }
+.dwg-tb-cells { display: flex; flex: 1; }
+.dwg-tb-cell { display: flex; flex-direction: column; justify-content: center; padding: 4px 10px; border-right: 1px solid #111; min-width: 0; }
+.dwg-tb-k { color: #666; font-size: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+.dwg-tb-v { color: #111; font-weight: 600; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dwg-tb-stamp {
+  display: flex; align-items: center; text-align: center; padding: 6px 12px;
+  color: #C0392B; font-weight: 800; font-size: 11px; letter-spacing: 0.03em; max-width: 130px;
+}
+/* keep the interactive helpers visible against white */
+.fp-node { fill: #fff; stroke: var(--accent); stroke-width: 0.02; cursor: grab; }
+.fp-wall.preview { stroke: var(--accent); stroke-width: 0.03; stroke-dasharray: 0.15 0.1; fill: none; pointer-events: none; }
+.fp-guide { stroke: var(--accent); stroke-width: 0.012; stroke-dasharray: 0.1 0.08; pointer-events: none; opacity: 0.6; }
+
 /* ---------- building controls (length/width sliders) ---------- */
 .building-controls { display: flex; flex-direction: column; gap: 8px; }
-.bc-slider { gap: 3px; font-size: 12px; color: var(--text-muted); }
-.bc-slider span strong { color: var(--text); }
-.bc-slider input[type="range"] { width: 100%; }
-.bc-type { display: flex; gap: 2px; }
-.bc-type button {
-  flex: 1; background: var(--surface-raised); border: 1px solid var(--border); color: var(--text-muted);
-  padding: 5px; font-size: 12px;
+.bc-readout {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
 }
-.bc-type button:first-child { border-radius: 6px 0 0 6px; }
-.bc-type button:last-child { border-radius: 0 6px 6px 0; }
-.bc-type button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.bc-readout strong { font-size: 15px; color: var(--text); }
+.bc-readout span { font-size: 11px; color: var(--text-muted); }
+/* size sliders that snap to discrete sizes; datalist renders the snap marks.
+   Current size is shown in .bc-readout above — no numeric labels here. */
+.bc-slider { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--text-muted); }
+.bc-slider input[type="range"] { width: 100%; accent-color: var(--accent); margin: 2px 0; }
+.bc-slider datalist { display: flex; justify-content: space-between; padding: 0 2px; }
+.bc-slider datalist option { padding: 0; font-size: 0; color: var(--text-muted); }
+.bc-dda { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text-muted); cursor: pointer; }
+.bc-dda input { accent-color: var(--accent); }
 .bc-add {
   display: flex; align-items: center; justify-content: center; gap: 5px;
   background: var(--surface-raised); border: 1px solid var(--border); color: var(--text);

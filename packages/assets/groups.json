@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "note": "Assembly groups — named sets of placedInstance templates with relative offsets (metres, plan X/Y). Dropping a group instantiates every part as an individual placedInstance, so they price and edit exactly like hand-placed items. Parts with dx2M/dy2M are partition SEGMENTS; the rest are point fixtures. Validated by assets:check (every partId resolves in the manifest, every sku in the catalog).",
+  "groups": [
+    {
+      "id": "toilet-cubicle",
+      "displayName": "Toilet cubicle",
+      "tags": ["toilet", "cubicle", "wet"],
+      "parts": [
+        { "partId": "fixture-bath-pan", "sku": "BATH-PAN", "dxM": 0.5, "dyM": 0.6 },
+        { "partId": "fixture-bath-basin", "sku": "BATH-BASIN", "dxM": 1.4, "dyM": 0.45 }
+      ]
+    },
+    {
+      "id": "shower-cubicle",
+      "displayName": "Shower cubicle",
+      "tags": ["shower", "cubicle", "wet"],
+      "parts": [
+        { "partId": "fixture-bath-shower", "sku": "BATH-SHOWER", "dxM": 0.55, "dyM": 0.55 },
+        { "partId": "fixture-bath-basin", "sku": "BATH-BASIN", "dxM": 1.5, "dyM": 0.45 },
+        { "partId": "internal-wall-panel", "sku": "INTERNAL-WALL-LM", "dxM": 1.1, "dyM": 0.0, "dx2M": 1.1, "dy2M": 1.1 }
+      ]
+    },
+    {
+      "id": "accessible-wc-set",
+      "displayName": "Accessible WC set (DDA)",
+      "tags": ["accessible", "dda", "wc", "wet"],
+      "dda": true,
+      "parts": [
+        { "partId": "fixture-bath-accessible", "sku": "BATH-ASSY-ACCESSIBLE", "dxM": 1.0, "dyM": 1.0 },
+        { "partId": "fixture-bath-basin", "sku": "BATH-BASIN", "dxM": 2.1, "dyM": 0.45 },
+        { "partId": "internal-wall-panel", "sku": "INTERNAL-WALL-LM", "dxM": 2.4, "dyM": 0.0, "dx2M": 2.4, "dy2M": 2.2 }
+      ]
+    }
+  ]
+}
